@@ -26,6 +26,7 @@ for (const expected of [
   'class="sh-mascot-crop"', 'class="sh-wordmark"', "Shin's House", '/assets/shins-house-mascot-source.webp'
 ]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
 
+assert.match(html, /<header\b[^>]*>[\s\S]*?class=["']sh-brand-lockup["'][\s\S]*?<\/header>/i, 'new mascot + wordmark must replace branding inside the header');
 assert.ok(!/\.sh-brand-lockup\s*\{[^}]*position\s*:\s*fixed/i.test(css), 'brand lockup must replace the header logo, not use a fixed overlay');
 assert.match(robots, /Sitemap:/, 'robots.txt must reference sitemap');
 assert.match(sitemap, /<urlset/, 'sitemap.xml must be valid sitemap-shaped XML');
