@@ -1,0 +1,40 @@
+name: Shin's House Production Health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check production homepage
+        run: curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/ > /tmp/home.html
+      - name: Check readiness endpoint
+        env:
+          EXPECT_COMMERCE_READY: ${{ vars.EXPECT_COMMERCE_READY }}
+        run: |
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/api/health/ready > /tmp/ready.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/ready.json','utf8'));
+          if (typeof data.ok !== 'boolean' || !Array.isArray(data.blockers)) {
+            console.error('Unexpected readiness payload', data);
+            process.exit(1);
+          }
+          console.log(JSON.stringify(data, null, 2));
+          if (process.env.EXPECT_COMMERCE_READY === 'true' && data.ok !== true) {
+            console.error('Production commerce was expected to be ready but blockers remain.');
+            process.exit(1);
+          }
+          NODE
+      - name: Verify legal routes
+        run: |
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/legal/terms > /dev/null
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/legal/privacy > /dev/null
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/legal/refund > /dev/null
