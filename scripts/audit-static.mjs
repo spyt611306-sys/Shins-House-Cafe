@@ -12,6 +12,7 @@ for (const required of ['index.html','styles.css','robots.txt','sitemap.xml','40
 }
 
 const html = read('index.html');
+const css = read('styles.css');
 const robots = read('robots.txt');
 const sitemap = read('sitemap.xml');
 
@@ -20,40 +21,32 @@ for (const forbidden of ['Loading v4.3','bundle-mini/','DecompressionStream','at
 }
 
 for (const expected of [
-  '<meta name="description"',
-  '<link rel="canonical"',
-  'property="og:title"',
-  'application/ld+json',
-  '/legal/terms',
-  '/legal/privacy',
-  '/legal/refund',
-  'class="sh-brand-lockup"',
-  '/assets/shins-house-mascot-logo.webp'
+  '<meta name="description"', '<link rel="canonical"', 'property="og:title"', 'application/ld+json',
+  '/legal/terms', '/legal/privacy', '/legal/refund', 'class="sh-brand-lockup"',
+  'class="sh-mascot-crop"', 'class="sh-wordmark"', "Shin's House", '/assets/shins-house-mascot-source.webp'
 ]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
 
+assert.match(html, /<header\b[^>]*>[\s\S]*?class=["']sh-brand-lockup["'][\s\S]*?<\/header>/i, 'new mascot + wordmark must replace branding inside the header');
+assert.ok(!/\.sh-brand-lockup\s*\{[^}]*position\s*:\s*fixed/i.test(css), 'brand lockup must replace the header logo, not use a fixed overlay');
 assert.match(robots, /Sitemap:/, 'robots.txt must reference sitemap');
 assert.match(sitemap, /<urlset/, 'sitemap.xml must be valid sitemap-shaped XML');
 assert.ok(fs.existsSync(path.join(dist, 'assets')), 'assets directory must exist');
 const assets = fs.readdirSync(path.join(dist, 'assets')).filter((name) => fs.statSync(path.join(dist, 'assets', name)).isFile());
 assert.ok(assets.length >= 10, `expected at least 10 static assets, found ${assets.length}`);
-const brandAsset = path.join(dist, 'assets', 'shins-house-mascot-logo.webp');
-assert.ok(fs.existsSync(brandAsset), 'official mascot logo asset must exist');
-assert.ok(fs.statSync(brandAsset).size > 10000, 'official mascot logo asset is unexpectedly small');
+const brandAsset = path.join(dist, 'assets', 'shins-house-mascot-source.webp');
+assert.ok(fs.existsSync(brandAsset), 'official mascot source asset must exist');
+assert.ok(fs.statSync(brandAsset).size > 10000, 'official mascot source asset is unexpectedly small');
 
 const imgTags = html.match(/<img\b[^>]*>/gi) || [];
 const missingAlt = imgTags.filter((tag) => !/\balt\s*=/.test(tag));
-const missingDecoding = imgTags.filter((tag) => !/\bdecoding\s*=/.test(tag) && !/shins-house-mascot-logo/.test(tag));
+const missingDecoding = imgTags.filter((tag) => !/\bdecoding\s*=/.test(tag) && !/shins-house-mascot-source/.test(tag));
 assert.equal(missingDecoding.length, 0, 'all content images should opt into async decoding');
 
 const forms = html.match(/<form\b[^>]*>/gi) || [];
 const buttons = html.match(/<button\b[^>]*>/gi) || [];
 console.log(JSON.stringify({
-  staticAudit: 'passed',
-  assets: assets.length,
-  images: imgTags.length,
-  imagesMissingAlt: missingAlt.length,
-  mascotBrandAsset: fs.statSync(brandAsset).size,
-  forms: forms.length,
-  buttons: buttons.length,
+  staticAudit: 'passed', assets: assets.length, images: imgTags.length,
+  imagesMissingAlt: missingAlt.length, mascotBrandAsset: fs.statSync(brandAsset).size,
+  brandMode: 'header-replacement', forms: forms.length, buttons: buttons.length,
   note: missingAlt.length ? 'Missing alt text remains a launch accessibility task.' : 'Image alt coverage detected.'
 }, null, 2));

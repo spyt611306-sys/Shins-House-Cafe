@@ -17,18 +17,37 @@ if (image.length < 10000 || image.toString('ascii', 0, 4) !== 'RIFF' || image.to
   throw new Error('Invalid Shin\'s House mascot WebP source');
 }
 fs.mkdirSync(assetsOut, { recursive: true });
-fs.writeFileSync(path.join(assetsOut, 'shins-house-mascot-logo.webp'), image);
+fs.writeFileSync(path.join(assetsOut, 'shins-house-mascot-source.webp'), image);
 
-const brandMarkup = `<a class="sh-brand-lockup" href="/" aria-label="Shin's House 홈"><img src="/assets/shins-house-mascot-logo.webp" width="360" height="227" alt="커피잔을 든 강아지 Shin's House 마스코트와 로고"></a>`;
-const brandCss = `\n/* Shin's House official mascot lockup */\n.sh-brand-lockup{position:fixed;top:14px;left:18px;z-index:9999;display:block;width:156px;filter:drop-shadow(0 5px 18px rgba(19,12,7,.18));transition:transform .2s ease,opacity .2s ease}.sh-brand-lockup:hover{transform:translateY(-1px)}.sh-brand-lockup img{display:block;width:100%;height:auto;border:0}.sh-brand-lockup:focus-visible{outline:3px solid #d6a968;outline-offset:4px;border-radius:12px}@media(max-width:760px){.sh-brand-lockup{top:10px;left:10px;width:112px}}@media(max-width:420px){.sh-brand-lockup{width:96px}}\n`;
+const brandMarkup = `<a class="sh-brand-lockup" href="/" aria-label="Shin's House 홈"><span class="sh-mascot-crop" aria-hidden="true"><img src="/assets/shins-house-mascot-source.webp" alt=""></span><span class="sh-wordmark"><strong>Shin's House</strong><small>GOOD COFFEE · BETTER DAYS</small></span></a>`;
+const brandCss = `\n/* Shin's House official brand replacement: mascot + new wordmark */\n.sh-brand-lockup{display:inline-flex;align-items:center;gap:10px;flex:0 0 auto;text-decoration:none!important;color:#2d2118!important;line-height:1;min-width:max-content}.sh-mascot-crop{position:relative;display:block;width:74px;height:62px;overflow:hidden;flex:0 0 74px;border-radius:50%;background:#f4ecd2;box-shadow:0 2px 12px rgba(35,24,15,.10)}.sh-mascot-crop img{position:absolute!important;width:124px!important;height:auto!important;max-width:none!important;left:-25px!important;top:0!important;display:block!important}.sh-wordmark{display:flex;flex-direction:column;gap:7px}.sh-wordmark strong{font-family:Georgia,'Times New Roman',serif;font-size:29px;font-weight:700;letter-spacing:-1.1px;white-space:nowrap}.sh-wordmark small{font-family:Arial,Helvetica,sans-serif;font-size:9px;font-weight:700;letter-spacing:2.6px;color:#7a5c43;white-space:nowrap}.sh-brand-lockup:hover .sh-wordmark strong{color:#6f492f}.sh-brand-lockup:focus-visible{outline:3px solid #c9955f;outline-offset:5px;border-radius:10px}@media(max-width:760px){.sh-brand-lockup{gap:7px}.sh-mascot-crop{width:58px;height:50px;flex-basis:58px}.sh-mascot-crop img{width:98px!important;left:-20px!important}.sh-wordmark strong{font-size:22px;letter-spacing:-.8px}.sh-wordmark small{font-size:7px;letter-spacing:1.7px}}@media(max-width:420px){.sh-mascot-crop{width:50px;height:43px;flex-basis:50px}.sh-mascot-crop img{width:85px!important;left:-17px!important}.sh-wordmark strong{font-size:19px}.sh-wordmark small{font-size:6.2px;letter-spacing:1.35px}}\n`;
+
+const replaceHeaderBrand = (html) => {
+  // Remove the previous fixed overlay lockup entirely; this is a replacement, not an overlay.
+  html = html.replace(/\s*<a\s+class=["']sh-brand-lockup["'][\s\S]*?<\/a>\s*/gi, '\n');
+  let replaced = false;
+  html = html.replace(/<header\b[^>]*>[\s\S]*?<\/header>/i, (header) => {
+    let next = header.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (anchor) => {
+      if (replaced) return anchor;
+      const looksLikeBrand = /Shin(?:'|’)?s\s*House|logo|brand/i.test(anchor) || /href=["'](?:\/|#top)["']/i.test(anchor);
+      if (!looksLikeBrand) return anchor;
+      replaced = true;
+      return brandMarkup;
+    });
+    if (!replaced) {
+      next = next.replace(/<header\b([^>]*)>/i, `<header$1>${brandMarkup}`);
+      replaced = true;
+    }
+    return next;
+  });
+  if (!replaced) html = html.replace(/<body\b([^>]*)>/i, `<body$1>${brandMarkup}`);
+  return html;
+};
 
 for (const name of ['index.html', '404.html']) {
   const file = path.join(out, name);
-  let html = fs.readFileSync(file, 'utf8');
-  if (!html.includes('class="sh-brand-lockup"')) {
-    html = html.replace(/<body([^>]*)>/i, `<body$1>\n${brandMarkup}`);
-    fs.writeFileSync(file, html, 'utf8');
-  }
+  const html = replaceHeaderBrand(fs.readFileSync(file, 'utf8'));
+  fs.writeFileSync(file, html, 'utf8');
 }
 fs.appendFileSync(path.join(out, 'styles.css'), brandCss, 'utf8');
-console.log(`Applied Shin's House official mascot brand asset (${image.length} bytes)`);
+console.log(`Replaced Shin's House header logo with mascot + new wordmark (${image.length} bytes)`);
