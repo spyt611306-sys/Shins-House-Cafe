@@ -1,0 +1,32 @@
+name: Shin's House CI
+
+on:
+  push:
+    branches: ['main', 'commercialization/**']
+  pull_request:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: API syntax and static build
+        run: npm run check
+      - name: Verify generated files
+        run: |
+          test -s dist/index.html
+          test -s dist/styles.css
+          test -s dist/robots.txt
+          test -s dist/sitemap.xml
+          test "$(find dist/assets -type f | wc -l)" -ge 10
+          ! grep -q "Loading v4.3" dist/index.html
