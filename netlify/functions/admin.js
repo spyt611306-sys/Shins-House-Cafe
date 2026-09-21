@@ -182,6 +182,7 @@ const authError = (error) => {
   if (code === 'ADMIN_AUTH_NOT_CONFIGURED') return json(503, { ok: false, code });
   if (code === 'ADMIN_NOT_ALLOWED') return json(403, { ok: false, code });
   if (code === 'ADMIN_AUTH_REQUIRED' || error.statusCode === 401) return json(401, { ok: false, code: 'ADMIN_AUTH_REQUIRED' });
+  if (error.statusCode === 503) return json(503, { ok: false, code: 'ADMIN_SERVICE_NOT_READY' });
   return null;
 };
 
@@ -191,6 +192,7 @@ exports.handler = async (event) => {
 
   try {
     if (method === 'POST' && route === 'login') {
+      if (!authConfigured()) return json(503, { ok: false, code: 'ADMIN_AUTH_NOT_CONFIGURED' });
       if (!(await rateLimit(event, 'admin-login', 8, 900))) return json(429, { ok: false, code: 'RATE_LIMITED' });
       const body = parseBody(event);
       const session = await login(text(body.email, 200).toLowerCase(), String(body.password || ''));
