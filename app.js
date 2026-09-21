@@ -1,30 +1,21 @@
 (() => {
-const settings={"bank_name": "신스은행", "account_number": "000-0000-0000", "account_holder": "신스하우스", "transfer_notice": "주문자명과 입금자명이 다를 경우 고객센터로 알려주세요.", "shipping_notice": "입금 확인 후 상품을 준비하며 운송장 등록 시 배송 상태를 안내합니다.", "customer_phone": "0503-5260-7479", "customer_email": "hello@shins-house.example", "return_address": "부산광역시 부산진구 새싹로8번길 35-8 1층 신스하우스", "hero_kicker": "SHIN'S HOUSE · BUSAN", "hero_title_1": "Coffee & Objects", "hero_title_2": "", "hero_copy": "매일 마시기 좋은 커피와 필요한 물건을 차분하게 고릅니다.", "hero_image_1": "assets/asset-04-c6a206d3.webp", "hero_image_2": "assets/asset-05-66066f69.webp", "hero_image_3": "assets/asset-06-364ff1bd.webp", "subscription_enabled": true, "subscription_kicker": "MONTHLY COFFEE CLUB", "subscription_title": "매달 필요한 만큼, 확인한 뒤 준비합니다.", "subscription_description": "자동결제가 아닌 신청형 구독입니다. 발송 전에 구매 의사를 확인합니다.", "subscription_notice": "신청 후 판매자가 연락드려 구성과 첫 발송 일정을 확인합니다.", "subscription_image": "assets/asset-09-7bb279f9.webp", "shipping_fee_setting": 3000, "free_shipping_threshold": 50000, "business_name": "신스하우스", "representative_name": "신현수", "business_number": "", "mail_order_number": "", "business_address": "부산광역시 부산진구 새싹로8번길 35-8 1층", "privacy_officer": "", "commerce_ready": true};
-const products=[{"id": 1, "name": "하우스 블렌드 200g", "category": "coffee", "description": "고소한 단맛과 편안한 여운을 담은 데일리 블렌드", "price": 18000, "stock": 24, "low_stock_threshold": 3, "image": "assets/asset-11-7ec3ab46.webp", "active": true, "sort_order": 1}, {"id": 2, "name": "나이트 디카페인 200g", "category": "coffee", "description": "부드러운 단맛과 낮은 카페인으로 늦은 시간에도 편안한 커피", "price": 21000, "stock": 18, "low_stock_threshold": 3, "image": "assets/asset-12-67790ddf.webp", "active": true, "sort_order": 2}, {"id": 3, "name": "클래식 크림 머그", "category": "goods", "description": "매일 편하게 사용할 수 있는 크림 컬러 머그", "price": 19000, "stock": 12, "low_stock_threshold": 3, "image": "assets/asset-08-409f9713.webp", "active": true, "sort_order": 3}, {"id": 4, "name": "신스하우스 선물 세트", "category": "gift", "description": "원두와 커피 오브젝트를 함께 구성한 선물 세트", "price": 39000, "stock": 9, "low_stock_threshold": 3, "image": "assets/asset-07-dbd7b39f.webp", "active": true, "sort_order": 4}];
-const plans=[{"id": 1, "name": "하우스 베이직", "description": "매월 원두 한 봉을 취향에 맞춰 안내합니다.", "price": 18000, "quantity_label": "원두 200g × 1", "delivery_cycle": "매월 1회", "shipping_fee": 0, "subscriber_limit": 0, "active": true, "sort_order": 1}, {"id": 2, "name": "커피 페어", "description": "서로 다른 두 가지 원두를 비교해 즐길 수 있습니다.", "price": 34000, "quantity_label": "원두 200g × 2", "delivery_cycle": "매월 1회", "shipping_fee": 0, "subscriber_limit": 0, "active": true, "sort_order": 2}, {"id": 3, "name": "디카페인 클럽", "description": "늦은 시간에도 편안한 디카페인 원두 구성입니다.", "price": 21000, "quantity_label": "디카페인 200g × 1", "delivery_cycle": "매월 1회", "shipping_fee": 0, "subscriber_limit": 0, "active": true, "sort_order": 3}];
-const policies={"terms": {"version": "2026-08-27-v4.3", "title": "이용약관 및 주문계약 안내", "summary": "상품·수량·금액·배송비를 확인한 뒤 주문이 접수됩니다."}, "privacy": {"version": "2026-08-27-v4.3", "title": "개인정보 수집·이용 안내", "summary": "주문·배송·고객응대에 필요한 최소 정보만 수집합니다.", "items": "이름, 휴대전화번호, 배송주소, 주문·상담 내용", "purpose": "주문 처리, 배송, 고객응대"}, "refund": {"version": "2026-08-27-v4.3", "title": "취소·교환·환불 안내", "summary": "미입금 단계에서는 주문조회에서 직접 취소할 수 있습니다.", "exceptions": "관련 법령상 제한 사유가 있는 경우 제한될 수 있습니다.", "refund": "환급과 배송비는 주문 상태와 귀책사유에 따라 처리합니다."}, "subscription": {"version": "2026-08-27-v4.3", "title": "정기구독 신청 안내", "summary": "자동결제가 아닌 신청형 구독입니다.", "cancel": "상담 단계에서 변경·해지가 가능합니다."}};
-let lastOrder=null;
-const jsonResponse=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
-const originalFetch=window.fetch.bind(window);
-window.fetch=async(input,init={})=>{
- const url=typeof input==='string'?input:input.url;
- if(!url.startsWith('/api/')) return originalFetch(input,init);
- const method=(init.method||'GET').toUpperCase();
- if(url==='/api/bootstrap') return jsonResponse({settings,products,subscription_plans:plans,policies});
- if(url==='/api/policies') return jsonResponse(policies);
- if(url==='/api/health/ready') return jsonResponse({ok:true,version:'4.3.0',warnings:[]});
- if(url==='/api/orders'&&method==='POST'){const b=JSON.parse(init.body||'{}');const subtotal=(b.items||[]).reduce((s,i)=>s+(products.find(p=>p.id===i.product_id)?.price||0)*i.quantity,0);lastOrder={order_id:'SH-260827-DEMO4301',public_token:'preview-token',status:'입금 대기',subtotal,shipping_fee:subtotal>=50000?0:3000,total:subtotal+(subtotal>=50000?0:3000),bank:{bank_name:settings.bank_name,account_number:settings.account_number,account_holder:settings.account_holder,transfer_notice:settings.transfer_notice,shipping_notice:settings.shipping_notice},created_at:new Date().toISOString()};return jsonResponse(lastOrder);}
- if(url==='/api/orders/lookup'&&method==='POST') return jsonResponse({orders:lastOrder?[{...lastOrder,items:[{product_id:1,name:'하우스 블렌드 200g',price:18000,quantity:1,line_total:18000}],tracking_number:'',payment_notice_at:null,consent_at:new Date().toISOString(),action_token:'preview.action.token.123'}]:[],subscriptions:[]});
- if(/\/api\/orders\/[^/]+\/payment-notice/.test(url)) return jsonResponse({ok:true,status:'입금 확인 요청',message:'입금 확인 요청이 접수되었습니다.'});
- if(/\/api\/orders\/[^/]+\/cancel/.test(url)) return jsonResponse({ok:true,status:'주문 취소',message:'주문이 취소되었습니다.'});
- if(url==='/api/subscriptions'&&method==='POST') return jsonResponse({ok:true,subscription_id:'SUB-260827-DEMO43',status:'신청 접수',message:settings.subscription_notice});
- if(url==='/api/admin/login'&&method==='POST') return jsonResponse({access_token:'preview-access',refresh_token:'preview-refresh',expires_in:3600,user:{email:'admin@preview.local'}});
- if(url==='/api/admin/refresh'&&method==='POST') return jsonResponse({access_token:'preview-access-2',refresh_token:'preview-refresh',expires_in:3600});
- if(url==='/api/admin/logout') return jsonResponse({ok:true});
- if(url==='/api/admin/bootstrap') return jsonResponse({settings:{...settings,commerce_ready:true},products,orders:[],order_statuses:['입금 대기','입금 확인 요청','입금 확인','상품 준비','배송 중','배송 완료','주문 취소','환불 완료'],subscription_plans:plans,subscriptions:[],subscription_statuses:['신청 접수','상담 완료','구독 활성','일시정지','해지'],operations:{payment_waiting:0,shipping_ready:0,new_subscriptions:0,low_stock_products:[],commerce_ready:true,security_warnings:[]}});
- if(url==='/api/admin/uploads'&&method==='POST') return jsonResponse({ok:true,url:"assets/asset-07-dbd7b39f.webp",width:1200,height:1200});
- if(url.endsWith('.csv')) return new Response('샘플,CSV\r\n1,2',{status:200,headers:{'Content-Type':'text/csv'}});
- if(url.startsWith('/api/admin/')) return jsonResponse({ok:true,id:99,message:'미리보기에서 저장되었습니다.'});
- return jsonResponse({detail:'Preview mock route not found'},404);
-};
+  'use strict';
+
+  /*
+   * Production safety guard
+   * -----------------------
+   * The previous v4.3 preview file intercepted every /api/* request in the
+   * browser and returned demo success responses for orders, subscriptions,
+   * inventory and administrator login. That behavior is unsafe for a live
+   * commerce site because nothing is persisted or authenticated server-side.
+   *
+   * Production now uses the Netlify Function API configured in netlify.toml.
+   * Run local development with `netlify dev` so the same server API is used.
+   */
+
+  window.__SHINS_HOUSE_RUNTIME__ = Object.freeze({
+    mode: 'production-api',
+    apiBase: '/api',
+    version: '4.4.0-foundation'
+  });
 })();
