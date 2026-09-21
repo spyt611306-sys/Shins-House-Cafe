@@ -92,15 +92,21 @@ const phone = process.env.CUSTOMER_PHONE || '0503-5260-7479';
 const address = process.env.BUSINESS_ADDRESS || '부산광역시 부산진구 새싹로8번길 35-8 1층';
 
 const escapeJson = (value) => JSON.stringify(value).replace(/</g, '\\u003c');
+const injectBeforeClosing = (source, tag, fragment) => {
+  const closing = new RegExp(`</${tag}\\s*>`, 'i');
+  if (closing.test(source)) return source.replace(closing, `${fragment}\n</${tag}>`);
+  return `${source}\n${fragment}`;
+};
+
 const seo = `\n<meta name="description" content="${description}">\n<link rel="canonical" href="${siteUrl}/">\n<meta property="og:type" content="website">\n<meta property="og:site_name" content="Shin's House">\n<meta property="og:title" content="Shin's House — Coffee & Objects">\n<meta property="og:description" content="${description}">\n<meta property="og:url" content="${siteUrl}/">\n<meta name="twitter:card" content="summary_large_image">\n<script type="application/ld+json">${escapeJson({ '@context':'https://schema.org', '@type':'Store', name:businessName, url:`${siteUrl}/`, telephone:phone, address:{ '@type':'PostalAddress', streetAddress:address, addressCountry:'KR' } })}</script>`;
 
 const legalLinks = `<div class="shins-commercial-footer" role="contentinfo" style="padding:28px 20px;text-align:center;font-size:13px;line-height:1.8;background:#15110d;color:#d9cbbb"><a href="/legal/terms" style="color:inherit;margin:0 8px">이용약관</a><a href="/legal/privacy" style="color:inherit;margin:0 8px">개인정보처리방침</a><a href="/legal/refund" style="color:inherit;margin:0 8px">취소·교환·환불</a><div style="margin-top:8px;opacity:.72">© ${new Date().getFullYear()} Shin's House</div></div>`;
 
 let html = payload.html;
 html = html.replace(/<title>[^<]*<\/title>/i, `<title>Shin's House — Coffee & Objects</title>`);
-if (!/href=["']styles\.css["']/i.test(html)) html = html.replace('</head>', '<link rel="stylesheet" href="styles.css"></head>');
-html = html.replace('</head>', `${seo}\n</head>`);
-html = html.replace('</body>', `${legalLinks}\n</body>`);
+if (!/href=["']styles\.css["']/i.test(html)) html = injectBeforeClosing(html, 'head', '<link rel="stylesheet" href="styles.css">');
+html = injectBeforeClosing(html, 'head', seo);
+html = injectBeforeClosing(html, 'body', legalLinks);
 html = html.replace(/<img(?![^>]*\bdecoding=)/gi, '<img decoding="async"');
 
 fs.writeFileSync(path.join(out, 'index.html'), html, 'utf8');
