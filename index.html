@@ -18,40 +18,83 @@
   <div id="boot"><div><b>Shin's House</b><small>Loading v4.3…</small></div></div>
   <script>
   (async()=>{
+    const EXPECTED=[
+      {len:16000,hash:'0eba204cc0284f59'},
+      {len:16000,hash:'db1443cdf3c0d125'},
+      {len:16000,hash:'99e9e088abfa7d17'},
+      {len:16000,hash:'696098f7c47fb137'},
+      {len:16000,hash:'7ef48690516062b8'},
+      {len:16000,hash:'6d16273fd52e08e4'},
+      {len:16000,hash:'5bb12fa00d6e6985'},
+      {len:16000,hash:'b31ddc15e68cebb5'},
+      {len:16000,hash:'63306d1fc4c277d4'},
+      {len:14880,hash:'ad0023ff424e55fc'}
+    ];
+    const B=911382323n;
+    const MASK=(1n<<64n)-1n;
     const fail=(stage,error)=>{
       console.error('[Shin\'s House loader]',stage,error);
       document.body.innerHTML=`<main id="boot"><div class="error"><b>Shin's House</b><p>페이지 로드 실패</p><small>단계: ${stage}</small><pre></pre></div></main>`;
       document.querySelector('#boot pre').textContent=String(error?.stack||error);
     };
+    const hash64=s=>{
+      let h=0n;
+      for(let i=0;i<s.length;i++) h=(h*B+BigInt(s.charCodeAt(i)))&MASK;
+      return h;
+    };
+    const repairSingleExtra=(s,targetHex)=>{
+      const n=s.length,target=BigInt('0x'+targetHex);
+      const pow=new Array(n+1),pref=new Array(n+1),suff=new Array(n+1);
+      pow[0]=1n;
+      for(let i=1;i<=n;i++) pow[i]=(pow[i-1]*B)&MASK;
+      pref[0]=0n;
+      for(let i=0;i<n;i++) pref[i+1]=(pref[i]*B+BigInt(s.charCodeAt(i)))&MASK;
+      suff[n]=0n;
+      for(let i=n-1;i>=0;i--) suff[i]=(BigInt(s.charCodeAt(i))*pow[n-1-i]+suff[i+1])&MASK;
+      for(let i=0;i<n;i++){
+        const candidate=(pref[i]*pow[n-1-i]+suff[i+1])&MASK;
+        if(candidate===target) return {text:s.slice(0,i)+s.slice(i+1),removedIndex:i,removedChar:s[i]};
+      }
+      return null;
+    };
+    const normalizeChunk=(text,index)=>{
+      const spec=EXPECTED[index-1];
+      let cleaned=text.replace(/[^A-Za-z0-9+/=]/g,'');
+      const nonBase64Removed=text.length-cleaned.length;
+      if(nonBase64Removed) console.warn(`[Shin's House] bundle-${String(index).padStart(2,'0')}: Base64 외 문자 ${nonBase64Removed}개 제거`);
+      if(cleaned.length===spec.len+1){
+        const repaired=repairSingleExtra(cleaned,spec.hash);
+        if(!repaired) throw new Error(`bundle-${String(index).padStart(2,'0')} 단일 문자 손상 자동복구 실패 (길이 ${cleaned.length})`);
+        console.warn(`[Shin's House] bundle-${String(index).padStart(2,'0')}: 손상 문자 1개 자동복구 (index ${repaired.removedIndex})`);
+        cleaned=repaired.text;
+      }
+      if(cleaned.length!==spec.len) throw new Error(`bundle-${String(index).padStart(2,'0')} 길이 오류: ${cleaned.length} / expected ${spec.len}`);
+      const actual=hash64(cleaned).toString(16).padStart(16,'0');
+      if(actual!==spec.hash) throw new Error(`bundle-${String(index).padStart(2,'0')} 무결성 오류: ${actual}`);
+      return cleaned;
+    };
     const decodeChunk=(text,index)=>{
-      const cleaned=text.replace(/[^A-Za-z0-9+/=]/g,'');
-      const removed=text.length-cleaned.length;
-      if(!cleaned.length) throw new Error(`bundle-${String(index).padStart(2,'0')} 데이터가 비어 있습니다.`);
-      if(cleaned.length%4===1) throw new Error(`bundle-${String(index).padStart(2,'0')} Base64 길이 오류: ${cleaned.length}`);
-      const normalized=cleaned+'='.repeat((4-cleaned.length%4)%4);
-      if(removed>0) console.warn(`[Shin's House] bundle-${String(index).padStart(2,'0')}에서 Base64 외 문자 ${removed}개를 제거했습니다.`);
+      const cleaned=normalizeChunk(text,index);
       try{
-        const decoded=atob(normalized);
+        const decoded=atob(cleaned);
         return Uint8Array.from(decoded,c=>c.charCodeAt(0));
       }catch(error){
         throw new Error(`bundle-${String(index).padStart(2,'0')} Base64 디코딩 실패: ${error.message}`);
       }
     };
     try{
-      const files=Array.from({length:10},(_,i)=>`bundle-mini/bundle-${String(i+1).padStart(2,'0')}.txt`);
+      const files=Array.from({length:10},(_,i)=>`bundle-mini/bundle-${String(i+1).padStart(2,'0')}.txt?v=4.3.2`);
       const parts=await Promise.all(files.map(async path=>{
         const response=await fetch(path,{cache:'no-store'});
         if(!response.ok) throw new Error(`${response.status} ${path}`);
         return response.text();
       }));
-
       const chunks=parts.map((text,i)=>decodeChunk(text,i+1));
       const total=chunks.reduce((sum,chunk)=>sum+chunk.length,0);
       const binary=new Uint8Array(total);
       let offset=0;
       for(const chunk of chunks){binary.set(chunk,offset);offset+=chunk.length;}
       if(!('DecompressionStream' in window)) throw new Error('DecompressionStream을 지원하는 최신 브라우저가 필요합니다.');
-
       let text;
       try{
         const stream=new Blob([binary]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -60,7 +103,6 @@
         fail('gzip 해제',error);
         return;
       }
-
       let payload;
       try{
         payload=JSON.parse(text);
@@ -68,20 +110,15 @@
         fail('번들 JSON 해석',error);
         return;
       }
-      if(!payload||typeof payload.html!=='string'||typeof payload.css!=='string'||!payload.assets){
-        throw new Error('v4.3 번들 구조가 올바르지 않습니다.');
-      }
-
+      if(!payload||typeof payload.html!=='string'||typeof payload.css!=='string'||!payload.assets) throw new Error('v4.3 번들 구조가 올바르지 않습니다.');
       const assets={};
       for(const [name,data] of Object.entries(payload.assets)) assets[name]=`data:image/webp;base64,${data}`;
-      let page=payload.html;
-      let css=payload.css;
+      let page=payload.html,css=payload.css;
       for(const [name,url] of Object.entries(assets)){
         page=page.split('assets/'+name).join(url);
         css=css.split('assets/'+name).join(url);
       }
       page=page.replace(/<link[^>]*href=["']styles\.css["'][^>]*>/i,`<style>${css}</style>`);
-
       const runtime=`<script>window.__SHINS_ASSETS__=${JSON.stringify(assets)};(function(){const a=window.__SHINS_ASSETS__;function f(e){if(!e||e.nodeType!==1)return;if(e.hasAttribute&&e.hasAttribute('src')){const s=e.getAttribute('src')||'';if(s.startsWith('assets/')&&a[s.slice(7)])e.setAttribute('src',a[s.slice(7)])}if(e.hasAttribute&&e.hasAttribute('style')){let s=e.getAttribute('style')||'';for(const[n,u]of Object.entries(a))s=s.split('assets/'+n).join(u);e.setAttribute('style',s)}if(e.querySelectorAll)e.querySelectorAll('[src],[style]').forEach(f)}new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='attributes')f(m.target);m.addedNodes&&m.addedNodes.forEach(f)})).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['src','style']});document.addEventListener('DOMContentLoaded',()=>f(document.documentElement))})();<\/script>`;
       page=page.replace('</head>',runtime+'</head>');
       document.open();
