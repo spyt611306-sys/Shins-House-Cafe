@@ -1,0 +1,14 @@
+{
+  "name": "shins-house-cafe",
+  "version": "4.6.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "check:api": "node --check netlify/functions/api.js && node --check netlify/functions/admin.js && node --check netlify/functions/legal.js && node --check netlify/functions/_lib/supabase.js && node --check netlify/functions/_lib/admin-auth.js",
+    "check": "npm run check:api && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
