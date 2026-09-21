@@ -1,6 +1,16 @@
 -- Shin's House admin operations
 -- Phase 3/6: audit trail and validated order status transitions.
 
+create sequence if not exists public.products_id_seq;
+select setval('public.products_id_seq', greatest(coalesce((select max(id) from public.products),0),1), true);
+alter sequence public.products_id_seq owned by public.products.id;
+alter table public.products alter column id set default nextval('public.products_id_seq');
+
+create sequence if not exists public.subscription_plans_id_seq;
+select setval('public.subscription_plans_id_seq', greatest(coalesce((select max(id) from public.subscription_plans),0),1), true);
+alter sequence public.subscription_plans_id_seq owned by public.subscription_plans.id;
+alter table public.subscription_plans alter column id set default nextval('public.subscription_plans_id_seq');
+
 create table if not exists public.admin_audit_logs (
   id bigserial primary key,
   actor_email text not null,
