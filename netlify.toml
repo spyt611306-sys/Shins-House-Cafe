@@ -3,6 +3,12 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/legal/*"
+  to = "/.netlify/functions/legal?route=:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/admin/*"
   to = "/.netlify/functions/admin?route=:splat"
   status = 200
