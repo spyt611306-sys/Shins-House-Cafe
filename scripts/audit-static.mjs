@@ -24,14 +24,14 @@ for (const forbidden of [
   'Loading v4.3','bundle-mini/','DecompressionStream','atob(',
   'sh-mascot-crop','sh-wordmark','shins-house-mascot-source.webp',
   '/assets/shins-house-logo.svg','/assets/shins-house-logo-premium-v2.svg',
-  '/assets/shins-house-logo-generated-v1.webp'
-]) assert.ok(!html.includes(forbidden), `production HTML must not contain legacy runtime/brand artifact: ${forbidden}`);
+  '/assets/shins-house-logo-generated-v1.webp',
+  'sh-home-hero__shade','sh-home-hero__content','sh-home-hero__actions','sh-home-hero__eyebrow','sh-home-hero__copy'
+]) assert.ok(!html.includes(forbidden), `production HTML must not contain legacy/overlay artifact: ${forbidden}`);
 
 for (const expected of [
   '<meta name="description"','<link rel="canonical"','property="og:title"','application/ld+json',
   '/legal/terms','/legal/privacy','/legal/refund','class="sh-brand-lockup"',
-  `/assets/${logoFile}`,`/assets/${heroFile}`,'class="sh-home-hero"',"Shin's House",
-  '커피 구매','굿즈 보기'
+  `/assets/${logoFile}`,`/assets/${heroFile}`,'class="sh-home-hero"',"Shin's House"
 ]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
 
 for (const expected of [
@@ -43,8 +43,9 @@ assert.match(app, /sh-search-close[\s\S]*type=\"button\"|type=\"button\"[\s\S]*s
 
 assert.match(netlifyToml, /command\s*=\s*["']npm run build["']/i, 'Netlify must run the full npm build');
 assert.match(html, /<header\b[^>]*>[\s\S]*?class=["']sh-brand-lockup["'][\s\S]*?<\/header>/i, 'generated logo must replace branding inside the header');
-assert.match(html, /<\/header>\s*<section[^>]+class=["']sh-home-hero["']/i, '4K hero must be directly below the header');
+assert.match(html, /<\/header>\s*<section[^>]+class=["']sh-home-hero["'][^>]*>\s*<img[^>]+class=["']sh-home-hero__image["'][^>]*>\s*<\/section>/i, 'hero must be image-only and directly below header');
 assert.ok(!/\.sh-brand-lockup\s*\{[^}]*position\s*:\s*fixed/i.test(css), 'brand lockup must not be a fixed overlay');
+assert.match(css, /header\{[^}]*position:relative!important[^}]*inset:auto!important/i, 'header must not overlay the hero');
 assert.ok(css.includes('width:100vw') && css.includes('calc(50% - 50vw)'), 'hero must render full bleed without left/right page boundaries');
 assert.match(robots, /Sitemap:/, 'robots.txt must reference sitemap');
 assert.match(sitemap, /<urlset/, 'sitemap.xml must be valid sitemap-shaped XML');
@@ -67,6 +68,6 @@ assert.equal(missingDecoding.length, 0, 'all images should opt into async decodi
 
 console.log(JSON.stringify({
   staticAudit:'passed', images:imgTags.length, imagesMissingAlt:missingAlt.length,
-  logoBytes:logoBytes.length, hero:'3840x2160 SVG', navigation:'4-item runtime menu',
-  share:'clipboard + fallback', search:'dialog submit/close guarded', netlifyBuild:'npm run build'
+  logoBytes:logoBytes.length, hero:'3840x2160 SVG image-only', navigation:'separate header menu',
+  heroOverlay:'removed', headerOverlap:'prevented', share:'clipboard + fallback', search:'dialog submit/close guarded', netlifyBuild:'npm run build'
 }, null, 2));
