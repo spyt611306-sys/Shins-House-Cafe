@@ -12,7 +12,7 @@ const sourceParts = [
 ].map((name) => path.join(root, 'brand-source', name));
 const logoFile = 'shins-house-logo-generated-v2.webp';
 const targetLogo = path.join(assetsOut, logoFile);
-const EXPECTED_SHA256 = '4af86e42a0ac862aff390d87530bb8043652d1422d97e74be26c730b217f60ca';
+const EXPECTED_SHA256 = 'bae8549f358b1438191be51b199d9b63866746463e8579275a4afe20a6a38ed7';
 
 for (const file of sourceParts) {
   if (!fs.existsSync(file)) throw new Error(`Missing generated logo source part: ${path.basename(file)}`);
