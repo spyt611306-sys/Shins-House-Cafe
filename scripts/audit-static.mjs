@@ -34,9 +34,12 @@ for (const expected of [
   '커피 구매','굿즈 보기'
 ]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
 
-for (const expected of ['커피 구매','굿즈 구매','매장 안내','navigator.clipboard.writeText','sh-primary-nav','sh-search-dialog']) {
-  assert.ok(app.includes(expected), `runtime UI missing ${expected}`);
-}
+for (const expected of [
+  '커피 구매','굿즈 구매','매장 안내','navigator.clipboard?.writeText','sh-primary-nav','sh-search-dialog',
+  "control.closest('#sh-search-dialog')","form.addEventListener('submit'",'class="sh-search-close"','scrollMarginTop'
+]) assert.ok(app.includes(expected), `runtime UI missing ${expected}`);
+assert.ok(!app.includes('method="dialog"'), 'search form must not rely on dialog form submission semantics');
+assert.match(app, /sh-search-close[\s\S]*type=\"button\"|type=\"button\"[\s\S]*sh-search-close/, 'search close control must be a non-submit button');
 
 assert.match(netlifyToml, /command\s*=\s*["']npm run build["']/i, 'Netlify must run the full npm build');
 assert.match(html, /<header\b[^>]*>[\s\S]*?class=["']sh-brand-lockup["'][\s\S]*?<\/header>/i, 'generated logo must replace branding inside the header');
@@ -65,5 +68,5 @@ assert.equal(missingDecoding.length, 0, 'all images should opt into async decodi
 console.log(JSON.stringify({
   staticAudit:'passed', images:imgTags.length, imagesMissingAlt:missingAlt.length,
   logoBytes:logoBytes.length, hero:'3840x2160 SVG', navigation:'4-item runtime menu',
-  share:'clipboard + fallback', search:'dialog fallback', netlifyBuild:'npm run build'
+  share:'clipboard + fallback', search:'dialog submit/close guarded', netlifyBuild:'npm run build'
 }, null, 2));
