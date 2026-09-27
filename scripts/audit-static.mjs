@@ -18,34 +18,35 @@ const robots = read('robots.txt');
 const sitemap = read('sitemap.xml');
 const netlifyToml = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 const logoFile = 'shins-house-logo-generated-v2.webp';
+const fallbackFile = 'shins-house-editorial-fallback.svg';
 
 for (const forbidden of [
   'Loading v4.3','bundle-mini/','DecompressionStream','atob(',
   'sh-mascot-crop','sh-wordmark','shins-house-mascot-source.webp',
   '/assets/shins-house-logo.svg','/assets/shins-house-logo-premium-v2.svg',
-  '/assets/shins-house-logo-generated-v1.webp',
-  'sh-home-hero','shins-house-hero-4k-v1.svg'
+  '/assets/shins-house-logo-generated-v1.webp','sh-home-hero'
 ]) assert.ok(!html.includes(forbidden), `production HTML must not contain removed/legacy artifact: ${forbidden}`);
 
 for (const expected of [
   '<meta name="description"','<link rel="canonical"','property="og:title"','application/ld+json',
-  '/legal/terms','/legal/privacy','/legal/refund','class="sh-brand-lockup"',
-  `/assets/${logoFile}`,"Shin's House"
+  '/legal/terms','/legal/privacy','/legal/refund','class="sh-ref-header"','class="sh-ref-brand"',
+  `/assets/${logoFile}`,'class="sh-editorial-home"','class="sh-ref-hero"','id="story"','id="coffee"',
+  'id="community"','id="store"','OUR ORIGIN STORY','ROASTING PHILOSOPHY','BARISTA PICKS','FEATURED DESSERTS','COMMUNITY & EVENTS',
+  '좋은 커피가','좋은 하루를 만듭니다.'
 ]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
 
 for (const expected of [
-  '커피 구매','굿즈 구매','매장 안내','navigator.clipboard?.writeText','sh-primary-nav','sh-search-dialog',
+  'STORY','COFFEE','SPACE','COMMUNITY','ONLINE STORE','navigator.clipboard?.writeText','sh-ref-nav','sh-search-dialog',
   "control.closest('#sh-search-dialog')","form.addEventListener('submit'",'class="sh-search-close"','scrollMarginTop'
 ]) assert.ok(app.includes(expected), `runtime UI missing ${expected}`);
 assert.ok(!app.includes('method="dialog"'), 'search form must not rely on dialog form submission semantics');
 assert.match(app, /sh-search-close[\s\S]*type=\"button\"|type=\"button\"[\s\S]*sh-search-close/, 'search close control must be a non-submit button');
 
 assert.match(netlifyToml, /command\s*=\s*["']npm run build["']/i, 'Netlify must run the full npm build');
-assert.match(html, /<header\b[^>]*>[\s\S]*?class=["']sh-brand-lockup["'][\s\S]*?<\/header>/i, 'generated logo must be visible inside the header');
-assert.ok(!/<\/header>\s*<section[^>]+class=["'][^"']*(?:sh-home-hero|hero|banner|visual)[^"']*["']/i.test(html), 'homepage must not start with a hero/banner after the header');
-assert.ok(!/\.sh-brand-lockup\s*\{[^}]*position\s*:\s*fixed/i.test(css), 'brand lockup must stay in normal header flow');
-assert.match(css, /\.sh-brand-lockup\{[^}]*display:inline-flex!important[^}]*visibility:visible!important[^}]*opacity:1!important/i, 'brand logo must be forced visible');
-assert.match(css, /header\{[^}]*display:flex!important[^}]*align-items:center!important/i, 'header must use a stable visible flex layout');
+assert.match(html, /<header\b[^>]*class=["'][^"']*sh-ref-header[^"']*["'][\s\S]*?<\/header>/i, 'editorial header must exist');
+assert.match(html, /<\/header>\s*<main[^>]+class=["'][^"']*sh-editorial-home[^"']*["']/i, 'editorial homepage must start directly below header');
+assert.ok(css.includes('--sh-cream:#f4efe6') && css.includes('.sh-ref-wave') && css.includes('.sh-ref-picks'), 'editorial design system must be present');
+assert.ok(css.includes('clip-path:ellipse') && css.includes('border-radius:52%'), 'organic curved image language must be present');
 assert.match(robots, /Sitemap:/, 'robots.txt must reference sitemap');
 assert.match(sitemap, /<urlset/, 'sitemap.xml must be valid sitemap-shaped XML');
 
@@ -55,6 +56,8 @@ const logoBytes = fs.readFileSync(brandAsset);
 assert.equal(logoBytes.length, 14418, 'generated logo asset byte size mismatch');
 assert.equal(logoBytes.toString('ascii',0,4), 'RIFF', 'generated logo must be WebP/RIFF');
 assert.equal(logoBytes.toString('ascii',8,12), 'WEBP', 'generated logo must be WebP');
+const fallbackAsset = path.join(dist, 'assets', fallbackFile);
+assert.ok(fs.existsSync(fallbackAsset), 'editorial fallback artwork must exist');
 
 const imgTags = html.match(/<img\b[^>]*>/gi) || [];
 const missingAlt = imgTags.filter((tag) => !/\balt\s*=/.test(tag));
@@ -63,6 +66,6 @@ assert.equal(missingDecoding.length, 0, 'all images should opt into async decodi
 
 console.log(JSON.stringify({
   staticAudit:'passed', images:imgTags.length, imagesMissingAlt:missingAlt.length,
-  logoBytes:logoBytes.length, homepageBanner:'removed', navigation:'header only',
-  logoVisibility:'forced visible', share:'clipboard + fallback', search:'dialog submit/close guarded', netlifyBuild:'npm run build'
+  logoBytes:logoBytes.length, homepage:'editorial reference redesign', navigation:'story/coffee/space/community/store',
+  organicShapes:'enabled', legacyCommerce:'preserved below editorial layer', search:'dialog guarded', netlifyBuild:'npm run build'
 }, null, 2));
