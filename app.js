@@ -4,7 +4,7 @@
   window.__SHINS_HOUSE_RUNTIME__ = Object.freeze({
     mode: 'production-api',
     apiBase: '/api',
-    version: '4.8.1-home-fixes'
+    version: '5.0.0-editorial-home'
   });
 
   const ready = (fn) => document.readyState === 'loading'
@@ -29,45 +29,27 @@
     };
 
     const findSection = (patterns) => {
-      const candidates = [...document.querySelectorAll('main section, main article, body > section, [data-section]')]
-        .filter((node) => !node.classList.contains('sh-home-hero'));
+      const candidates = [...document.querySelectorAll('main section, main article, body > section, [data-section]')];
       return candidates.find((el) => patterns.some((pattern) => pattern.test(normalize(el.textContent).slice(0, 1200))));
     };
     const coffeeSection = document.getElementById('coffee') || findSection([/커피/,/원두/,/coffee/i]);
     const goodsSection = document.getElementById('goods') || findSection([/굿즈/,/오브젝트/,/goods/i,/objects/i]);
     const storeSection = document.getElementById('store') || findSection([/매장/,/오시는/,/부산/,/store/i,/location/i]);
-    if (coffeeSection && !coffeeSection.id) coffeeSection.id = 'coffee';
-    if (goodsSection && !goodsSection.id) goodsSection.id = 'goods';
-    if (storeSection && !storeSection.id) storeSection.id = 'store';
     [coffeeSection, goodsSection, storeSection].filter(Boolean).forEach((section) => {
       section.style.scrollMarginTop = '96px';
     });
 
-    const header = document.querySelector('header');
+    const header = document.querySelector('.sh-ref-header, header');
     if (header) {
-      const navCandidates = [...header.querySelectorAll('nav, [role="navigation"], [class*="nav"]')];
-      const nav = navCandidates.find((el) => {
-        const text = normalize(el.textContent);
-        return el.querySelectorAll('a').length >= 3 && /홈|커피|브랜드|정기|매장|이용|coffee|store/i.test(text);
-      });
+      const nav = header.querySelector('.sh-ref-nav, nav, [role="navigation"]');
       if (nav) {
-        nav.classList.add('sh-primary-nav');
         nav.innerHTML = [
-          ['/', '홈', 'top'],
-          ['#coffee', '커피 구매', 'coffee'],
-          ['#goods', '굿즈 구매', 'goods'],
-          ['#store', '매장 안내', 'store']
+          ['#story', 'STORY', 'story'],
+          ['#coffee', 'COFFEE', 'coffee'],
+          ['#space', 'SPACE', 'space'],
+          ['#community', 'COMMUNITY', 'community'],
+          ['#store', 'ONLINE STORE', 'store']
         ].map(([href,label,target]) => `<a href="${href}" data-sh-target="${target}">${label}</a>`).join('');
-      }
-    }
-
-    const hero = document.querySelector('.sh-home-hero');
-    if (hero) {
-      let next = hero.nextElementSibling;
-      while (next && next.matches('script,style')) next = next.nextElementSibling;
-      if (next) {
-        const signature = `${next.id || ''} ${next.className || ''}`;
-        if (/hero|visual|banner|slider|swiper|carousel/i.test(signature)) next.classList.add('sh-legacy-hero-hidden');
       }
     }
 
