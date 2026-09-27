@@ -4,7 +4,7 @@
   window.__SHINS_HOUSE_RUNTIME__ = Object.freeze({
     mode: 'production-api',
     apiBase: '/api',
-    version: '5.0.0-editorial-home'
+    version: '5.1.0-home-replacement'
   });
 
   const ready = (fn) => document.readyState === 'loading'
@@ -28,37 +28,12 @@
       toastTimer = setTimeout(() => toast.classList.remove('is-show'), 1800);
     };
 
-    const findSection = (patterns) => {
-      const candidates = [...document.querySelectorAll('main section, main article, body > section, [data-section]')];
-      return candidates.find((el) => patterns.some((pattern) => pattern.test(normalize(el.textContent).slice(0, 1200))));
-    };
-    const coffeeSection = document.getElementById('coffee') || findSection([/커피/,/원두/,/coffee/i]);
-    const goodsSection = document.getElementById('goods') || findSection([/굿즈/,/오브젝트/,/goods/i,/objects/i]);
-    const storeSection = document.getElementById('store') || findSection([/매장/,/오시는/,/부산/,/store/i,/location/i]);
-    [coffeeSection, goodsSection, storeSection].filter(Boolean).forEach((section) => {
-      section.style.scrollMarginTop = '96px';
-    });
-
-    const header = document.querySelector('.sh-ref-header, header');
-    if (header) {
-      const nav = header.querySelector('.sh-ref-nav, nav, [role="navigation"]');
-      if (nav) {
-        nav.innerHTML = [
-          ['#story', 'STORY', 'story'],
-          ['#coffee', 'COFFEE', 'coffee'],
-          ['#space', 'SPACE', 'space'],
-          ['#community', 'COMMUNITY', 'community'],
-          ['#store', 'ONLINE STORE', 'store']
-        ].map(([href,label,target]) => `<a href="${href}" data-sh-target="${target}">${label}</a>`).join('');
-      }
-    }
-
     const scrollTarget = (target) => {
       if (target === 'top') {
         window.scrollTo({ top:0, behavior:'smooth' });
         return true;
       }
-      const node = document.getElementById(target) || ({ coffee:coffeeSection, goods:goodsSection, store:storeSection }[target]);
+      const node = document.getElementById(target);
       if (!node) {
         showToast('해당 영역을 준비 중입니다.');
         return false;
@@ -94,8 +69,7 @@
         input?.focus();
         return;
       }
-      const nodes = [...document.querySelectorAll('main section, main article, [class*="product"], [class*="item"]')]
-        .filter((node) => !node.closest('#sh-search-dialog'));
+      const nodes = [...document.querySelectorAll('main section, main article')];
       const match = nodes.find((node) => normalize(node.textContent).toLowerCase().includes(query));
       if (typeof dialog.close === 'function') dialog.close();
       else dialog.removeAttribute('open');
@@ -112,25 +86,11 @@
       if (dialog) return dialog;
       dialog = document.createElement('dialog');
       dialog.id = 'sh-search-dialog';
-      dialog.setAttribute('aria-labelledby', 'sh-search-title');
-      dialog.innerHTML = `<form class="sh-search-panel"><button type="button" class="sh-search-close" aria-label="검색 닫기">×</button><label id="sh-search-title" for="sh-search-input">사이트에서 찾기</label><div><input id="sh-search-input" type="search" autocomplete="off" placeholder="커피, 굿즈, 매장 등을 검색"><button type="submit">검색</button></div><p class="sh-search-help">페이지 안의 상품과 콘텐츠를 빠르게 찾아 이동합니다.</p></form>`;
+      dialog.innerHTML = `<form class="sh-search-panel"><button type="button" class="sh-search-close" aria-label="검색 닫기">×</button><label for="sh-search-input">사이트에서 찾기</label><div><input id="sh-search-input" type="search" autocomplete="off" placeholder="스토리, 커피, 공간 등을 검색"><button type="submit">검색</button></div></form>`;
       document.body.appendChild(dialog);
-
-      const form = dialog.querySelector('form');
-      const closeButton = dialog.querySelector('.sh-search-close');
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        runSearch(dialog);
-      });
-      closeButton.addEventListener('click', () => {
-        if (typeof dialog.close === 'function') dialog.close();
-        else dialog.removeAttribute('open');
-      });
-      dialog.addEventListener('click', (event) => {
-        if (event.target !== dialog) return;
-        if (typeof dialog.close === 'function') dialog.close();
-        else dialog.removeAttribute('open');
-      });
+      dialog.querySelector('form').addEventListener('submit', (event) => { event.preventDefault(); runSearch(dialog); });
+      dialog.querySelector('.sh-search-close').addEventListener('click', () => dialog.close?.());
+      dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close?.(); });
       return dialog;
     };
 
@@ -145,6 +105,7 @@
         scrollTarget(target);
         return;
       }
+
       const label = normalize(`${control.textContent} ${control.getAttribute('aria-label') || ''} ${control.getAttribute('title') || ''}`);
       if (/공유|share/i.test(label)) {
         event.preventDefault();
@@ -154,11 +115,8 @@
       if (/검색|search/i.test(label)) {
         event.preventDefault();
         const dialog = ensureSearchDialog();
-        if (typeof dialog.showModal === 'function') {
-          if (!dialog.open) dialog.showModal();
-        } else {
-          dialog.setAttribute('open','');
-        }
+        if (typeof dialog.showModal === 'function') dialog.showModal();
+        else dialog.setAttribute('open','');
         setTimeout(() => dialog.querySelector('input')?.focus(), 0);
       }
     });
