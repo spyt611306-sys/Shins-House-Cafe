@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "node scripts/build-static.mjs && node scripts/apply-brand-refresh.mjs && node scripts/finalize-home-replacement.mjs",
-    "check:api": "node --check app.js && node --check netlify/functions/api.js && node --check netlify/functions/admin.js && node --check netlify/functions/legal.js && node --check netlify/functions/_lib/supabase.js && node --check netlify/functions/_lib/admin-auth.js && node --check scripts/apply-brand-refresh.mjs && node --check scripts/finalize-home-replacement.mjs",
+    "check:api": "node --check app.js && node --check netlify/functions/api.js && node --check netlify/functions/admin.js && node --check netlify/functions/legal.js && node --check netlify/functions/_lib/supabase.js && node --check netlify/functions/_lib/admin-auth.js && node --check scripts/apply-brand-refresh.mjs && node --check scripts/finalize-home-replacement.mjs && node --check homepage/home.js && node --check homepage/shop-runtime.js",
     "test:smoke": "node scripts/smoke-api.mjs",
     "audit:static": "node scripts/audit-static.mjs",
     "check": "npm run check:api && npm run build && npm run audit:static && npm run test:smoke"
