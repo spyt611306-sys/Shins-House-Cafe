@@ -1,250 +1,314 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#221711">
-<title>Shin's House — Roastery & Coffee</title>
-<meta name="description" content="직접 원두를 선별하고 직접 볶아, 매장과 온라인에서 이어지는 신스하우스의 커피를 만나보세요.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/editorial.css">
-<link rel="preload" as="image" href="/assets/hero-20260928.webp">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17120f">
+  <title>Shin's House — Roastery & Coffee House</title>
+  <meta name="description" content="직접 선별한 원두를 직접 로스팅하여, 매장과 온라인에서 이어지는 신스하우스의 커피를 만나보세요.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/editorial.css">
+  <link rel="preload" as="image" href="/assets/hero-20260928.webp">
 </head>
 <body>
-<a class="skip-link" href="#coffee">메뉴 바로가기</a>
-<header class="sh-ref-header">
-  <a class="sh-ref-brand" href="/" aria-label="신스하우스 홈"><img src="/assets/logo-20260928.webp" width="2172" height="724" alt="Shin's House" decoding="async"></a>
-  <nav class="sh-ref-nav" aria-label="주요 메뉴">
-    <a href="#story">STORY</a>
-    <a href="#coffee">COFFEE</a>
-    <a href="#space">SPACE</a>
-    <a href="#community">COMMUNITY</a>
-    <a href="/shop.html">ONLINE STORE</a>
-  </nav>
-  <div class="header-actions">
-    <button class="icon-button" type="button" aria-label="메뉴 검색" id="search-open"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="10.5"/><path d="m21 21 9 9"/></svg></button>
-    <a class="icon-button" href="/shop.html?open=cart" aria-label="장바구니"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 3h4l4 20h16M7 7h23l-4 12H10"/><circle cx="12" cy="28" r="2"/><circle cx="25" cy="28" r="2"/></svg></a>
-    <button class="icon-button" id="menu-open" type="button" aria-label="전체 메뉴 열기" aria-expanded="false" aria-controls="navigation-dialog"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 6h26M3 16h26M3 26h26"/></svg></button>
-  </div>
-</header>
+  <a class="skip-link" href="#coffee">메뉴 바로가기</a>
 
-<main class="sh-editorial-home" id="top">
-  <section class="cinematic-hero" aria-label="신스하우스 카페">
-    <h1 class="sr-only">Shin's House</h1>
-    <img class="hero-image" src="/assets/hero-20260928.webp" width="1780" height="883" alt="따뜻한 햇살이 드는 신스하우스, 커피와 케이크가 놓인 테이블" fetchpriority="high" decoding="async">
-    <div class="hero-overlay"></div>
-    <div class="hero-copy-card">
-      <p class="eyebrow light">ROASTERY · BUSAN</p>
-      <h2>커피에 진심인 공간,<br>매장에서 그리고 온라인에서.</h2>
-      <p>신스하우스는 직접 원두를 선별하고 직접 볶아, 매장에서 정성스럽게 한 잔을 만들고 온라인에서는 같은 원두를 그대로 전합니다.</p>
-      <div class="hero-badges">
-        <span>Direct Selection</span>
-        <span>House Roasting</span>
-        <span>Online Bean Store</span>
-      </div>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="신스하우스 홈">
+      <img src="/assets/logo-20260928.webp" alt="Shin's House" width="2172" height="724" decoding="async">
+    </a>
+
+    <nav class="main-nav" aria-label="주요 메뉴">
+      <a href="#story">STORY</a>
+      <a href="#bean-store">BEANS</a>
+      <a href="#coffee">COFFEE</a>
+      <a href="#space">SPACE</a>
+      <a href="/shop.html">STORE</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-button" type="button" aria-label="메뉴 검색" id="search-open">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="10.5"/><path d="m21 21 9 9"/></svg>
+      </button>
+      <a class="icon-button" href="/shop.html?open=cart" aria-label="장바구니">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 3h4l4 20h16M7 7h23l-4 12H10"/><circle cx="12" cy="28" r="2"/><circle cx="25" cy="28" r="2"/></svg>
+      </a>
+      <button class="icon-button" id="menu-open" type="button" aria-label="전체 메뉴 열기" aria-expanded="false" aria-controls="navigation-dialog">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 6h26M3 16h26M3 26h26"/></svg>
+      </button>
     </div>
-  </section>
+  </header>
 
-  <section class="manifesto-section" aria-labelledby="manifesto-title">
-    <div class="section-heading compact">
+  <main id="top">
+    <section class="hero" aria-label="신스하우스 메인">
+      <img class="hero-image" src="/assets/hero-20260928.webp" alt="신스하우스 카페 메인 이미지" width="1780" height="883" fetchpriority="high" decoding="async">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="eyebrow light">ROASTERY · BUSAN</p>
+        <h1>커피에 진심인 공간,<br>매장에서 그리고 온라인에서.</h1>
+        <p class="hero-copy">
+          신스하우스는 원두를 직접 선별하고 직접 로스팅해,
+          매장에서는 한 잔의 완성도로, 온라인에서는 같은 원두의 경험으로 이어갑니다.
+        </p>
+        <div class="hero-links">
+          <a href="#bean-store">원두 구매하기</a>
+          <a href="#coffee">시그니처 메뉴 보기</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="intro-section" id="story">
+      <div class="intro-head">
+        <div>
+          <p class="eyebrow">SHIN'S HOUSE PHILOSOPHY</p>
+          <h2>좋은 커피는<br>화려함보다 균형입니다.</h2>
+        </div>
+        <p class="intro-text">
+          신스하우스는 향만 강한 커피보다, 매일 편안하게 마실 수 있는 균형을 중요하게 생각합니다.
+          좋은 재료를 고르고, 적절한 로스팅으로 맛을 정리하고, 공간의 분위기까지 하나의 경험으로 설계합니다.
+        </p>
+      </div>
+
+      <div class="philosophy-grid">
+        <article>
+          <span>01</span>
+          <h3>직접 원두 선별</h3>
+          <p>매일 마시기 좋은 향과 밸런스를 기준으로 생두를 직접 고릅니다.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>직접 로스팅</h3>
+          <p>부드러운 여운과 깔끔한 단맛이 남도록 신스하우스의 기준으로 직접 볶아냅니다.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>매장과 온라인 연결</h3>
+          <p>매장에서 경험한 그 원두를 집에서도 이어갈 수 있도록 온라인 스토어로 연결합니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="bean-store" id="bean-store" aria-labelledby="bean-title">
+      <div class="bean-intro">
+        <p class="eyebrow">ONLINE BEAN STORE</p>
+        <h2 id="bean-title">매장에서 사용하는 원두를<br>집에서도 즐겨보세요.</h2>
+        <p>
+          직접 선별하고 직접 볶은 원두를 온라인에서도 주문할 수 있습니다.
+          취향에 맞는 원두와 수량을 선택하고, 기존 스토어 장바구니로 바로 이어서 주문하세요.
+        </p>
+        <ul class="bean-points">
+          <li>직접 선별 · 직접 로스팅한 원두</li>
+          <li>실시간 가격 및 재고 연동</li>
+          <li>50,000원 이상 무료배송</li>
+        </ul>
+      </div>
+
+      <div class="bean-panel">
+        <div class="bean-visual">
+          <span class="bean-tag">SHIN'S HOUSE ROAST</span>
+          <div class="bean-visual-stage">
+            <img id="bean-product-image" src="/assets/logo-20260928.webp" alt="신스하우스 원두 상품" decoding="async">
+          </div>
+          <div class="bean-caption">
+            <p class="eyebrow small">HOUSE SELECTION</p>
+            <strong id="bean-product-note">하우스 블렌드 200g</strong>
+            <span>매장에서 실제 사용하는 신스하우스의 대표 원두</span>
+          </div>
+        </div>
+
+        <div class="bean-order">
+          <div class="bean-order-top">
+            <div>
+              <p class="eyebrow small">SELECT BEANS</p>
+              <h3>오늘의 원두를 고르세요.</h3>
+            </div>
+            <p class="bean-stock" id="bean-stock">재고 확인 중</p>
+          </div>
+
+          <div class="form-block">
+            <p class="form-label">원두 선택</p>
+            <div class="bean-product-list" id="bean-products" aria-label="원두 선택"></div>
+          </div>
+
+          <div class="form-block">
+            <p class="form-label">패키지 선택</p>
+            <div class="bean-packages">
+              <button type="button" data-bean-qty="1" class="selected" aria-pressed="true">
+                <small>DAILY</small>
+                <strong>200g</strong>
+                <span>1 pack</span>
+              </button>
+              <button type="button" data-bean-qty="2" aria-pressed="false">
+                <small>PAIR</small>
+                <strong>400g</strong>
+                <span>200g × 2</span>
+              </button>
+              <button type="button" data-bean-qty="3" aria-pressed="false">
+                <small>STOCK UP</small>
+                <strong>600g</strong>
+                <span>200g × 3</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bean-summary">
+            <div>
+              <span>총 상품금액</span>
+              <strong id="bean-price">0원</strong>
+            </div>
+            <p id="bean-shipping">배송 안내를 불러오는 중입니다.</p>
+          </div>
+
+          <div class="bean-actions">
+            <button class="primary-btn" id="bean-add-cart" type="button">장바구니 담고 주문하기</button>
+            <a class="secondary-btn" href="/shop.html">전체 원두 보러가기</a>
+          </div>
+
+          <p class="bean-status" id="bean-status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="menu-section" id="coffee" aria-labelledby="menu-title">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">SIGNATURE DRINKS</p>
+          <h2 id="menu-title">오늘, 어떤 커피를 드시겠어요?</h2>
+        </div>
+        <div class="section-side">
+          <p>햇살이 드는 공간에서 가장 사랑받는 신스하우스의 음료를 소개합니다.</p>
+          <a class="text-link" href="/shop.html">원두 · 굿즈 쇼핑</a>
+        </div>
+      </div>
+
+      <div class="menu-toolbar">
+        <div class="filters" role="group" aria-label="음료 종류">
+          <button type="button" class="selected" data-filter="all" aria-pressed="true">전체</button>
+          <button type="button" data-filter="black" aria-pressed="false">블랙 커피</button>
+          <button type="button" data-filter="milk" aria-pressed="false">라떼 · 크림</button>
+        </div>
+        <label class="menu-search">
+          <span class="sr-only">음료명 검색</span>
+          <input id="menu-query" type="search" placeholder="메뉴 검색" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="drink-grid">
+        <article class="drink" data-category="black">
+          <div class="drink-image"><img src="/assets/americano-hot.webp" alt="따뜻한 아메리카노" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>HOT</p>
+          <h3>아메리카노</h3>
+          <small>깔끔한 농도와 편안한 마무리</small>
+        </article>
+
+        <article class="drink" data-category="black">
+          <div class="drink-image"><img src="/assets/americano-iced.webp" alt="아이스 아메리카노" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>ICED</p>
+          <h3>아이스 아메리카노</h3>
+          <small>청량하게 즐기는 시그니처 블랙</small>
+        </article>
+
+        <article class="drink" data-category="milk">
+          <div class="drink-image"><img src="/assets/cafe-latte.webp" alt="카페라떼" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>LATTE</p>
+          <h3>카페라떼</h3>
+          <small>부드러운 우유와 에스프레소의 균형</small>
+        </article>
+
+        <article class="drink" data-category="milk">
+          <div class="drink-image"><img src="/assets/cappuccino.webp" alt="카푸치노" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>CAPPUCCINO</p>
+          <h3>카푸치노</h3>
+          <small>풍성한 거품과 깊은 향의 조화</small>
+        </article>
+
+        <article class="drink" data-category="milk">
+          <div class="drink-image"><img src="/assets/vanilla-latte.webp" alt="바닐라라떼" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>VANILLA LATTE</p>
+          <h3>바닐라라떼</h3>
+          <small>은은한 단맛이 더해진 부드러운 한 잔</small>
+        </article>
+
+        <article class="drink" data-category="milk">
+          <div class="drink-image"><img src="/assets/cream-coffee.webp" alt="크림 커피" width="1122" height="1402" loading="lazy" decoding="async"></div>
+          <p>CREAM COFFEE</p>
+          <h3>크림 커피</h3>
+          <small>진한 커피 위 부드러운 크림의 여운</small>
+        </article>
+      </div>
+
+      <p id="no-results" hidden>검색한 메뉴가 없습니다. 다른 이름으로 검색해 주세요.</p>
+      <p class="sr-only" id="menu-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="space-section" id="space">
+      <div class="space-copy">
+        <p class="eyebrow">SPACE · BUSAN</p>
+        <h2>신스하우스에서 만나요.</h2>
+        <p>
+          햇살이 드는 테이블, 나무의 온기, 커피 향이 천천히 퍼지는 분위기.
+          신스하우스는 잠시 쉬어가기 좋은 로스터리 커피하우스입니다.
+        </p>
+      </div>
+
+      <div class="space-card">
+        <div class="space-block">
+          <span class="mini-title">ADDRESS</span>
+          <p>부산광역시 부산진구<br>새싹로8번길 35-8 1층</p>
+        </div>
+        <div class="space-block">
+          <span class="mini-title">SPECIAL</span>
+          <p>직접 볶은 원두, 시그니처 음료,<br>온라인 스토어 연계 구매</p>
+        </div>
+        <a class="secondary-btn white" href="https://maps.google.com/?q=부산광역시+부산진구+새싹로8번길+35-8" target="_blank" rel="noopener">오시는 길 보기</a>
+      </div>
+    </section>
+
+    <section class="closing-section" id="community">
+      <p class="eyebrow">ONLINE STORE</p>
+      <h2>매장의 커피를 집에서도.</h2>
+      <p>신스하우스의 원두와 상품 이야기는 온라인 스토어에서 이어집니다.</p>
+      <div class="closing-actions">
+        <a class="primary-btn" href="/shop.html">온라인 스토어 둘러보기</a>
+        <a class="secondary-btn" href="/shop.html?open=cart">장바구니 바로가기</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="/" class="footer-brand">Shin's House</a>
+    <nav aria-label="이용 안내">
+      <a href="/legal/terms">이용약관</a>
+      <a href="/legal/privacy">개인정보처리방침</a>
+      <a href="/legal/refund">취소·교환·환불</a>
+    </nav>
+    <small>© Shin's House</small>
+  </footer>
+
+  <dialog id="navigation-dialog" class="navigation-dialog">
+    <button class="close-button" type="button" data-close aria-label="전체 메뉴 닫기">×</button>
+    <nav aria-label="전체 메뉴">
+      <a href="#story">STORY <span>브랜드 철학</span></a>
+      <a href="#bean-store">BEANS <span>원두 구매하기</span></a>
+      <a href="#coffee">COFFEE <span>시그니처 메뉴</span></a>
+      <a href="#space">SPACE <span>오시는 길</span></a>
+      <a href="/shop.html">STORE <span>온라인 스토어</span></a>
+    </nav>
+  </dialog>
+
+  <dialog id="search-dialog" class="search-dialog">
+    <button class="close-button" type="button" data-close aria-label="검색 닫기">×</button>
+    <form id="search-form">
+      <label for="header-query">어떤 커피를 찾으세요?</label>
       <div>
-        <p class="eyebrow">SHIN'S SIGNATURE</p>
-        <h2 id="manifesto-title">신스하우스가 커피를 준비하는 방식</h2>
+        <input id="header-query" type="search" placeholder="아메리카노, 라떼…" autocomplete="off">
+        <button type="submit">검색</button>
       </div>
-      <p class="section-lead">좋은 재료를 고르고, 가장 편안하게 마실 수 있는 밸런스로 볶아, 공간의 분위기까지 함께 전하는 것이 신스하우스의 기준입니다.</p>
-    </div>
-    <div class="manifesto-grid">
-      <article>
-        <span>01</span>
-        <h3>직접 원두 선별</h3>
-        <p>매일 마시기 좋은 향과 밸런스를 기준으로 생두를 직접 고릅니다.</p>
-      </article>
-      <article>
-        <span>02</span>
-        <h3>직접 로스팅</h3>
-        <p>매장에 어울리는 깊이와 부드러운 여운을 살려 직접 볶아냅니다.</p>
-      </article>
-      <article>
-        <span>03</span>
-        <h3>매장과 온라인 연결</h3>
-        <p>매장에서 즐기던 그 원두를 온라인에서도 집으로 편하게 받아보실 수 있습니다.</p>
-      </article>
-    </div>
-  </section>
+    </form>
+  </dialog>
 
-  <section class="bean-shop-section" id="bean-store" aria-labelledby="bean-title">
-    <div class="bean-shop-copy">
-      <p class="eyebrow">ONLINE BEAN STORE</p>
-      <h2 id="bean-title">매장에서 사용하던 원두를<br>집에서도 즐겨보세요.</h2>
-      <p class="bean-body">신스하우스는 직접 선별하고 직접 볶은 원두를 패키지로 준비해 온라인에서도 판매합니다. 취향에 맞는 원두와 용량을 선택하고, 기존 온라인 스토어 장바구니로 바로 연결해 주문할 수 있습니다.</p>
-      <ul class="bean-points">
-        <li>직접 선별 · 직접 로스팅한 원두</li>
-        <li>실시간 상품 가격 및 재고 연동</li>
-        <li>50,000원 이상 무료배송</li>
-      </ul>
-    </div>
-    <div class="bean-shop-card">
-      <div class="bean-visual-wrap">
-        <span class="bean-visual-tag">SHIN'S HOUSE ROAST</span>
-        <img id="bean-product-image" src="/assets/logo-20260928.webp" alt="신스하우스 원두 상품" decoding="async">
-      </div>
-      <div class="bean-order-panel">
-        <div class="bean-product-head">
-          <div>
-            <p class="mini-label">SELECT BEANS</p>
-            <h3 id="bean-product-note">하우스 블렌드</h3>
-          </div>
-          <p class="bean-stock" id="bean-stock">재고 확인 중</p>
-        </div>
-
-        <div class="bean-product-list" id="bean-products" aria-label="원두 선택"></div>
-
-        <div class="bean-package-row">
-          <p class="mini-label">PACKAGE</p>
-          <div class="bean-packages">
-            <button type="button" data-bean-qty="1" class="selected" aria-pressed="true"><strong>DAILY</strong><span>200g × 1</span></button>
-            <button type="button" data-bean-qty="2" aria-pressed="false"><strong>PAIR</strong><span>200g × 2</span></button>
-            <button type="button" data-bean-qty="3" aria-pressed="false"><strong>STOCK UP</strong><span>200g × 3</span></button>
-          </div>
-        </div>
-
-        <div class="bean-summary">
-          <div>
-            <span>총 상품금액</span>
-            <strong id="bean-price">0원</strong>
-          </div>
-          <p id="bean-shipping">배송 안내를 불러오는 중입니다.</p>
-        </div>
-
-        <div class="bean-actions">
-          <button class="primary-button" id="bean-add-cart" type="button">장바구니 담고 주문하기</button>
-          <a class="secondary-button" href="/shop.html">전체 원두 보러가기</a>
-        </div>
-        <p class="bean-status" id="bean-status" role="status" aria-live="polite"></p>
-      </div>
-    </div>
-  </section>
-
-  <section class="menu-section" id="coffee" aria-labelledby="menu-title">
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">SIGNATURE DRINKS</p>
-        <h2 id="menu-title">오늘, 어떤 커피를 드시겠어요?</h2>
-      </div>
-      <div class="section-link-group">
-        <p class="section-lead short">햇살이 드는 공간에서 가장 사랑받는 신스하우스의 음료를 소개합니다.</p>
-        <a class="text-link" href="/shop.html">원두 · 굿즈 쇼핑</a>
-      </div>
-    </div>
-
-    <div class="menu-controls">
-      <div class="filters" role="group" aria-label="음료 종류">
-        <button type="button" class="selected" data-filter="all" aria-pressed="true">전체</button>
-        <button type="button" data-filter="black" aria-pressed="false">블랙 커피</button>
-        <button type="button" data-filter="milk" aria-pressed="false">라떼 · 크림</button>
-      </div>
-      <label class="menu-search"><span class="sr-only">음료명 검색</span><input id="menu-query" type="search" placeholder="메뉴 검색" autocomplete="off"></label>
-    </div>
-
-    <div class="drink-grid">
-      <article class="drink" data-category="black">
-        <div class="drink-image"><img src="/assets/americano-hot.webp" width="1122" height="1402" alt="따뜻한 아메리카노" loading="lazy" decoding="async"></div>
-        <p>HOT</p>
-        <h3>아메리카노</h3>
-        <small>깔끔한 농도와 편안한 마무리</small>
-      </article>
-      <article class="drink" data-category="black">
-        <div class="drink-image"><img src="/assets/americano-iced.webp" width="1122" height="1402" alt="아이스 아메리카노" loading="lazy" decoding="async"></div>
-        <p>ICED</p>
-        <h3>아이스 아메리카노</h3>
-        <small>청량감 있게 즐기는 시그니처 블랙</small>
-      </article>
-      <article class="drink" data-category="milk">
-        <div class="drink-image"><img src="/assets/cafe-latte.webp" width="1122" height="1402" alt="라테 아트가 올라간 카페라떼" loading="lazy" decoding="async"></div>
-        <p>LATTE</p>
-        <h3>카페라떼</h3>
-        <small>부드러운 우유와 진한 에스프레소의 조화</small>
-      </article>
-      <article class="drink" data-category="milk">
-        <div class="drink-image"><img src="/assets/cappuccino.webp" width="1122" height="1402" alt="카푸치노" loading="lazy" decoding="async"></div>
-        <p>CAPPUCCINO</p>
-        <h3>카푸치노</h3>
-        <small>풍성한 거품과 향긋한 바디감</small>
-      </article>
-      <article class="drink" data-category="milk">
-        <div class="drink-image"><img src="/assets/vanilla-latte.webp" width="1122" height="1402" alt="따뜻한 바닐라라떼" loading="lazy" decoding="async"></div>
-        <p>VANILLA LATTE</p>
-        <h3>바닐라라떼</h3>
-        <small>은은한 단맛이 더해진 부드러운 한 잔</small>
-      </article>
-      <article class="drink" data-category="milk">
-        <div class="drink-image"><img src="/assets/cream-coffee.webp" width="1122" height="1402" alt="크림이 올라간 아이스 커피" loading="lazy" decoding="async"></div>
-        <p>CREAM COFFEE</p>
-        <h3>크림 커피</h3>
-        <small>진한 커피 위 부드러운 크림의 여운</small>
-      </article>
-    </div>
-    <p id="no-results" hidden>검색한 메뉴가 없습니다. 다른 이름으로 검색해 주세요.</p>
-    <p class="sr-only" id="menu-status" role="status" aria-live="polite"></p>
-  </section>
-
-  <section class="story-section" id="story">
-    <div class="story-copy">
-      <p class="eyebrow light">OUR STORY</p>
-      <h2>한 잔의 커피가<br>공간의 분위기까지 바꿉니다.</h2>
-      <p>신스하우스는 커피를 단순한 음료가 아니라, 하루 중 가장 편안한 순간을 만드는 매개라고 생각합니다. 그래서 원두의 향과 맛뿐 아니라, 공간의 조도와 온도, 시선이 머무는 장면까지 함께 고민합니다.</p>
-      <blockquote>“좋은 커피는 화려하기보다 오래 기억되는 편안함이어야 한다.”</blockquote>
-    </div>
-    <div class="story-visual-card">
-      <div class="story-visual"></div>
-      <div class="story-facts">
-        <div><strong>Direct</strong><span>직접 선별한 생두</span></div>
-        <div><strong>Roast</strong><span>직접 볶아 완성한 하우스 로스팅</span></div>
-        <div><strong>Store</strong><span>매장과 온라인 스토어로 이어지는 경험</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="space-section" id="space">
-    <div class="space-intro">
-      <p class="eyebrow">SPACE · BUSAN</p>
-      <h2>신스하우스에서 만나요.</h2>
-      <p>햇살이 드는 테이블, 나무의 온기, 커피 향이 천천히 퍼지는 분위기. 신스하우스는 잠시 쉬어가기 좋은 로스터리 카페입니다.</p>
-    </div>
-    <div class="space-card">
-      <div class="space-detail">
-        <span class="mini-label">ADDRESS</span>
-        <p>부산광역시 부산진구<br>새싹로8번길 35-8 1층</p>
-      </div>
-      <div class="space-detail">
-        <span class="mini-label">SPECIAL</span>
-        <p>직접 볶은 원두, 시그니처 음료,<br>온라인 스토어 연계 구매</p>
-      </div>
-      <a class="primary-button subtle" href="https://maps.google.com/?q=부산광역시+부산진구+새싹로8번길+35-8" target="_blank" rel="noopener">오시는 길 보기</a>
-    </div>
-  </section>
-
-  <section class="community-section" id="community">
-    <p class="eyebrow">ONLINE STORE</p>
-    <h2>매장의 커피를 집에서도.</h2>
-    <p>신스하우스의 원두와 상품 이야기는 온라인 스토어에서 이어집니다.<br>원두, 굿즈, 선물 구성을 편하게 둘러보세요.</p>
-    <div class="community-actions">
-      <a class="primary-button" href="/shop.html">온라인 스토어 둘러보기</a>
-      <a class="secondary-button" href="/shop.html?open=cart">장바구니 바로가기</a>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <a href="/" class="footer-brand">Shin's House</a>
-  <nav aria-label="이용 안내"><a href="/legal/terms">이용약관</a><a href="/legal/privacy">개인정보처리방침</a><a href="/legal/refund">취소·교환·환불</a></nav>
-  <small>© Shin's House</small>
-</footer>
-
-<dialog id="navigation-dialog" class="navigation-dialog"><button class="close-button" type="button" data-close aria-label="전체 메뉴 닫기">×</button><nav aria-label="전체 메뉴"><a href="#story">STORY <span>브랜드 이야기</span></a><a href="#coffee">COFFEE <span>시그니처 메뉴</span></a><a href="#bean-store">BEAN STORE <span>원두 구매하기</span></a><a href="#space">SPACE <span>오시는 길</span></a><a href="#community">COMMUNITY <span>온라인 스토어</span></a><a href="/shop.html">ONLINE STORE <span>원두 · 굿즈 쇼핑</span></a></nav></dialog>
-<dialog id="search-dialog" class="search-dialog"><button class="close-button" type="button" data-close aria-label="검색 닫기">×</button><form id="search-form"><label for="header-query">어떤 커피를 찾으세요?</label><div><input id="header-query" type="search" placeholder="아메리카노, 라떼…" autocomplete="off"><button type="submit">검색</button></div></form></dialog>
-<script src="/home.js" defer></script>
+  <script src="/home.js" defer></script>
 </body>
 </html>
