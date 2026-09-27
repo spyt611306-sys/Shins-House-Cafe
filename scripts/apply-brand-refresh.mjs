@@ -6,28 +6,37 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist');
 const assetsOut = path.join(out, 'assets');
-const logoParts = ['shins-house-logo-generated-v2.part01','shins-house-logo-generated-v2.part02'].map((name) => path.join(root, 'brand-source', name));
-const logoFile = 'shins-house-logo-generated-v2.webp';
-const logoTarget = path.join(assetsOut, logoFile);
-const EXPECTED_SHA256 = 'bae8549f358b1438191be51b199d9b63866746463e8579275a4afe20a6a38ed7';
-
-for (const file of logoParts) if (!fs.existsSync(file)) throw new Error(`Missing logo source: ${path.basename(file)}`);
-const logoB64 = logoParts.map((file) => fs.readFileSync(file, 'utf8').replace(/\s+/g, '')).join('');
-const logoBytes = Buffer.from(logoB64, 'base64');
-const logoDigest = crypto.createHash('sha256').update(logoBytes).digest('hex');
-if (logoDigest !== EXPECTED_SHA256 || logoBytes.toString('ascii',0,4) !== 'RIFF' || logoBytes.toString('ascii',8,12) !== 'WEBP') {
-  throw new Error('Shin\'s House logo integrity check failed');
-}
 fs.mkdirSync(assetsOut, { recursive:true });
-fs.writeFileSync(logoTarget, logoBytes);
 
+const readB64Parts = (names) => names.map((name) => fs.readFileSync(path.join(root, 'brand-source', name), 'utf8').replace(/\s+/g, '')).join('');
+const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const assertWebp = (bytes, label) => {
+  if (bytes.toString('ascii',0,4) !== 'RIFF' || bytes.toString('ascii',8,12) !== 'WEBP') throw new Error(`${label} is not WebP`);
+};
+
+const logoFile = 'shins-house-logo-generated-v2.webp';
+const logoBytes = Buffer.from(readB64Parts(['shins-house-logo-generated-v2.part01','shins-house-logo-generated-v2.part02']), 'base64');
+if (sha256(logoBytes) !== 'bae8549f358b1438191be51b199d9b63866746463e8579275a4afe20a6a38ed7') throw new Error('Shin\'s House logo integrity check failed');
+assertWebp(logoBytes, 'logo');
+fs.writeFileSync(path.join(assetsOut, logoFile), logoBytes);
+
+const heroFile = 'shins-house-cafe-hero.webp';
+const heroBytes = Buffer.from(readB64Parts(['hero-cafe-v2.part01','hero-cafe-v2.part02','hero-cafe-v2.part03']), 'base64');
+if (sha256(heroBytes) !== '066c215d77be4bcecf8a2acd423e32c24e2cd0c9c54423ed0359200e426a3a78') throw new Error('Hero image integrity check failed');
+assertWebp(heroBytes, 'hero');
+fs.writeFileSync(path.join(assetsOut, heroFile), heroBytes);
+
+// Preserve the complete legacy commerce experience as an independent page.
 const legacyIndex = path.join(out, 'index.html');
 const legacyHtml = fs.readFileSync(legacyIndex, 'utf8');
 fs.writeFileSync(path.join(out, 'shop.html'), legacyHtml, 'utf8');
 
+const iconSearch = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></svg>`;
+const iconBag = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>`;
+
 const header = `
-<header class="sh-ref-header">
-  <a class="sh-ref-brand" href="/" aria-label="Shin's House 홈">
+<header class="sh-ref-header" aria-label="Shin's House navigation">
+  <a class="sh-ref-brand" href="#top" data-sh-target="top" aria-label="Shin's House 홈">
     <img src="/assets/${logoFile}" width="320" height="107" alt="Shin's House" decoding="async">
   </a>
   <nav class="sh-ref-nav" aria-label="주요 메뉴">
@@ -37,87 +46,71 @@ const header = `
     <a href="#community" data-sh-target="community">COMMUNITY</a>
     <a href="/shop.html">ONLINE STORE</a>
   </nav>
-  <a class="sh-ref-visit" href="#space" data-sh-target="space">VISIT US</a>
+  <div class="sh-header-actions">
+    <a class="sh-icon-btn" href="/shop.html" aria-label="상품 검색">${iconSearch}</a>
+    <a class="sh-icon-btn" href="/shop.html#cart" aria-label="장바구니">${iconBag}</a>
+    <details class="sh-mobile-menu">
+      <summary aria-label="메뉴 열기"><i></i><i></i><i></i></summary>
+      <nav><a href="#story" data-sh-target="story">STORY</a><a href="#coffee" data-sh-target="coffee">COFFEE</a><a href="#space" data-sh-target="space">SPACE</a><a href="#community" data-sh-target="community">COMMUNITY</a><a href="/shop.html">ONLINE STORE</a></nav>
+    </details>
+  </div>
 </header>`;
 
 const home = `
 ${header}
 <main class="sh-editorial-home" id="top">
-  <section class="sh-hero" aria-labelledby="hero-title">
-    <div class="sh-hero-copy">
-      <p class="sh-kicker">COFFEE · PEOPLE · A BRIGHTER DAY</p>
-      <h1 id="hero-title">좋은 커피가<br>좋은 하루를<br>만듭니다.</h1>
-      <p class="sh-hand">Good Coffee, Brighter Days.</p>
-      <p class="sh-lead">매일 마셔도 편안한 커피와 오래 곁에 둘 취향을 고릅니다.<br>신스하우스는 한 잔의 경험을 차분하게 설계합니다.</p>
-      <div class="sh-hero-actions"><a class="sh-pill" href="#story" data-sh-target="story">OUR STORY <span>→</span></a><a class="sh-text-link" href="/shop.html">SHOP COFFEE ↗</a></div>
-    </div>
-    <aside class="sh-brand-panel" aria-label="Shin's House brand message">
-      <div class="sh-brand-ring"><span>SHIN'S HOUSE</span><b>2010</b><small>BUSAN · SPECIALTY COFFEE</small></div>
-      <p class="sh-panel-script">A small house<br>for better days.</p>
-      <div class="sh-panel-meta"><span>COFFEE</span><span>PEOPLE</span><span>CULTURE</span><span>COMMUNITY</span></div>
-    </aside>
+  <section class="sh-hero-media" aria-label="Shin's House cafe">
+    <img class="sh-hero-image" src="/assets/${heroFile}" alt="따뜻한 햇살이 드는 Shin's House 카페에서 커피를 즐기는 장면" fetchpriority="high" decoding="async">
+    <div class="sh-hero-shade" aria-hidden="true"></div>
+    <div class="sh-hero-foot"><p>SHIN'S HOUSE · BUSAN · EST. 2010</p><a href="#story" data-sh-target="story">DISCOVER <span>↓</span></a></div>
   </section>
 
   <section class="sh-story" id="story">
-    <div class="sh-section-title"><span>01</span><p class="sh-label">OUR STORY</p><h2>커피보다 먼저,<br>사람을 생각합니다.</h2></div>
-    <div class="sh-story-grid">
-      <article><b>ORIGIN</b><h3>좋은 재료에서 시작합니다.</h3><p>매일 편안하게 마실 수 있는 균형을 기준으로 원두를 고르고, 각 원두의 개성을 과하게 덮지 않는 방향을 지향합니다.</p></article>
-      <article><b>ROAST</b><h3>서두르지 않고 굽습니다.</h3><p>단맛, 질감, 향의 흐름이 자연스럽게 이어지도록 로스팅의 작은 차이를 반복해서 확인합니다.</p></article>
-      <article><b>EVERYDAY</b><h3>일상에 오래 남는 한 잔.</h3><p>강한 인상보다 다시 찾고 싶은 맛, 유행보다 오래 유지되는 취향을 신스하우스의 기준으로 삼습니다.</p></article>
-    </div>
+    <div class="sh-eyebrow"><span>01</span><b>OUR STORY</b></div>
+    <div class="sh-story-head"><h1>좋은 한 잔은<br>좋은 시간을 만듭니다.</h1><p>신스하우스는 커피 한 잔이 놓이는 순간과 그 시간을 함께 기억합니다. 매일 편안하게 찾을 수 있는 맛, 오래 머물고 싶은 공간, 다시 만나고 싶은 사람을 위한 작은 집입니다.</p></div>
+    <div class="sh-story-notes"><article><small>ORIGIN</small><h2>좋은 재료</h2><p>원두가 가진 단맛과 질감, 깨끗한 여운을 기준으로 고릅니다.</p></article><article><small>ROAST</small><h2>섬세한 로스팅</h2><p>과하게 덮지 않고 가장 자연스러운 균형을 찾습니다.</p></article><article><small>EVERYDAY</small><h2>편안한 일상</h2><p>강한 인상보다 다시 찾고 싶은 한 잔을 지향합니다.</p></article></div>
   </section>
 
   <section class="sh-coffee" id="coffee">
-    <div class="sh-section-title sh-section-title--wide"><div><span>02</span><p class="sh-label">COFFEE NOTES</p><h2>오늘의 취향을<br>한눈에 고르세요.</h2></div><a class="sh-text-link" href="/shop.html">전체 원두 보기 ↗</a></div>
-    <div class="sh-note-grid">
-      <article><em>01</em><p class="sh-note-type">NUTTY & SWEET</p><h3>고소하고 부드럽게</h3><p>초콜릿 · 견과 · 캐러멜</p><div class="sh-meter"><i style="--w:86%"></i></div></article>
-      <article><em>02</em><p class="sh-note-type">BALANCED</p><h3>매일 편안하게</h3><p>브라운슈가 · 코코아 · 클린 피니시</p><div class="sh-meter"><i style="--w:72%"></i></div></article>
-      <article><em>03</em><p class="sh-note-type">BRIGHT & JUICY</p><h3>산뜻하고 선명하게</h3><p>시트러스 · 베리 · 플로럴</p><div class="sh-meter"><i style="--w:62%"></i></div></article>
-      <article><em>04</em><p class="sh-note-type">COLD FAVORITE</p><h3>아이스로 더 깔끔하게</h3><p>달콤함 · 선명함 · 긴 여운</p><div class="sh-meter"><i style="--w:78%"></i></div></article>
+    <div class="sh-section-intro"><div class="sh-eyebrow"><span>02</span><b>COFFEE MENU</b></div><h2>오늘의 기분에 맞는<br>한 잔을 고르세요.</h2><a href="/shop.html">ONLINE STORE ↗</a></div>
+    <div class="sh-menu-grid">
+      <article><span>01</span><div><small>CLASSIC</small><h3>Americano</h3><p>깔끔한 바디와 길게 이어지는 커피의 여운</p></div><em>HOT · ICE</em></article>
+      <article><span>02</span><div><small>MILKY</small><h3>Café Latte</h3><p>에스프레소와 우유가 만드는 부드러운 밸런스</p></div><em>HOT · ICE</em></article>
+      <article><span>03</span><div><small>SWEET</small><h3>Vanilla Latte</h3><p>은은한 바닐라 향과 고소한 밀크의 조화</p></div><em>HOT · ICE</em></article>
+      <article><span>04</span><div><small>SIGNATURE</small><h3>Cream Coffee</h3><p>진한 커피 위에 부드러운 크림을 더한 시그니처</p></div><em>ICE</em></article>
     </div>
   </section>
 
   <section class="sh-space" id="space">
-    <div class="sh-space-copy"><span>03</span><p class="sh-label">SPACE · BUSAN</p><h2>커피가 조금 더<br>천천히 흐르는 공간.</h2><p>원두를 고르고, 한 잔을 마시고, 잠시 머무르는 시간까지 신스하우스의 경험입니다.</p><a class="sh-pill sh-pill--light" href="https://maps.google.com/?q=부산광역시+부산진구+새싹로8번길+35-8" rel="noopener">GET DIRECTIONS <span>↗</span></a></div>
-    <div class="sh-space-info"><div><small>ADDRESS</small><strong>부산광역시 부산진구<br>새싹로8번길 35-8 1층</strong></div><div><small>HOUSE NOTE</small><strong>GOOD COFFEE<br>BRIGHTER DAYS</strong></div><div><small>ONLINE</small><strong><a href="/shop.html">SHOP SHIN'S HOUSE ↗</a></strong></div></div>
+    <div class="sh-space-copy"><div class="sh-eyebrow sh-eyebrow--light"><span>03</span><b>SPACE · BUSAN</b></div><h2>A small house<br>for better days.</h2><p>커피를 고르고, 한 잔을 마시고, 잠시 머무르는 시간까지 신스하우스의 경험입니다.</p><a class="sh-outline-btn" href="https://maps.google.com/?q=부산광역시+부산진구+새싹로8번길+35-8" rel="noopener">VISIT SHIN'S HOUSE ↗</a></div>
+    <div class="sh-space-meta"><div><small>ADDRESS</small><strong>부산광역시 부산진구<br>새싹로8번길 35-8 1층</strong></div><div><small>HOUSE NOTE</small><strong>COFFEE · PEOPLE<br>CULTURE · COMMUNITY</strong></div><div><small>ONLINE</small><strong><a href="/shop.html">SHOP SHIN'S HOUSE ↗</a></strong></div></div>
   </section>
 
   <section class="sh-community" id="community">
-    <div class="sh-section-title"><span>04</span><p class="sh-label">COMMUNITY</p><h2>커피를 매개로<br>좋은 이야기를 잇습니다.</h2></div>
-    <div class="sh-community-grid">
-      <article><small>01</small><h3>CUPPING</h3><p>다양한 원두의 향미를 비교하고 취향을 발견하는 커피 테이블.</p></article>
-      <article><small>02</small><h3>WORKSHOP</h3><p>집에서도 더 좋은 한 잔을 만들 수 있도록 추출과 원두 이야기를 나눕니다.</p></article>
-      <article><small>03</small><h3>NEIGHBORHOOD</h3><p>사람과 지역, 일상의 작은 문화를 연결하는 신스하우스의 커뮤니티.</p></article>
-    </div>
+    <div class="sh-section-intro"><div class="sh-eyebrow"><span>04</span><b>COMMUNITY</b></div><h2>커피를 매개로<br>좋은 이야기를 잇습니다.</h2></div>
+    <div class="sh-community-grid"><article><small>01</small><h3>CUPPING</h3><p>원두의 향미를 비교하고 자신의 취향을 발견하는 시간.</p></article><article><small>02</small><h3>WORKSHOP</h3><p>집에서도 좋은 한 잔을 만들 수 있도록 추출 이야기를 나눕니다.</p></article><article><small>03</small><h3>NEIGHBORHOOD</h3><p>사람과 지역, 일상의 작은 문화를 연결하는 신스하우스.</p></article></div>
   </section>
 
-  <section class="sh-store" id="store">
-    <p class="sh-label">ONLINE STORE</p><h2>집에서도 이어지는<br>신스하우스의 커피.</h2><p>원두와 굿즈, 선물까지. 신스하우스의 취향을 온라인에서 만나보세요.</p><a class="sh-pill" href="/shop.html">SHOP NOW <span>→</span></a>
-  </section>
+  <section class="sh-store" id="store"><p>ONLINE STORE</p><h2>신스하우스의 취향을<br>집에서도 만나보세요.</h2><a href="/shop.html">SHOP NOW <span>→</span></a></section>
 </main>
-<footer class="sh-footer"><div><strong>Shin's House</strong><p>GOOD COFFEE · BRIGHTER DAYS</p></div><nav><a href="/legal/terms">이용약관</a><a href="/legal/privacy">개인정보처리방침</a><a href="/legal/refund">취소·교환·환불</a></nav></footer>
+<footer class="sh-footer"><div><strong>Shin's House</strong><p>BUSAN · EST. 2010</p></div><nav><a href="/legal/terms">이용약관</a><a href="/legal/privacy">개인정보처리방침</a><a href="/legal/refund">취소·교환·환불</a></nav></footer>
 <script src="/app.js" defer></script>`;
 
 const css = `
-:root{--ink:#171713;--paper:#f6f0e7;--paper2:#fbf8f2;--rust:#ad5b36;--green:#233126;--green2:#314235;--gold:#b99a66;--line:rgba(50,39,27,.16)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper2);color:var(--ink);font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;overflow-x:hidden}a{color:inherit}.sh-ref-header{min-height:88px;padding:10px clamp(22px,4.5vw,78px);display:grid;grid-template-columns:240px 1fr auto;align-items:center;gap:32px;background:rgba(249,246,239,.98);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}.sh-ref-brand{display:flex;align-items:center}.sh-ref-brand img{display:block;width:205px;height:auto;max-width:100%}.sh-ref-nav{display:flex;justify-content:center;align-items:center;gap:clamp(20px,3vw,48px)}.sh-ref-nav a,.sh-ref-visit{font-size:11px;font-weight:850;letter-spacing:.14em;text-decoration:none;white-space:nowrap}.sh-ref-nav a{padding:14px 0;position:relative}.sh-ref-nav a:after{content:'';position:absolute;left:50%;right:50%;bottom:7px;height:1px;background:var(--rust);transition:.2s}.sh-ref-nav a:hover:after,.sh-ref-nav a:focus-visible:after{left:0;right:0}.sh-ref-visit{border:1px solid var(--ink);padding:12px 19px;border-radius:999px}.sh-editorial-home{width:100%;background:var(--paper2)}.sh-hero{min-height:660px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(390px,.75fr);background:var(--paper2);border-bottom:1px solid var(--line)}.sh-hero-copy{padding:clamp(70px,8vw,128px) clamp(30px,7vw,120px)}.sh-kicker,.sh-label{font-size:10px;font-weight:850;letter-spacing:.2em;color:#775d49;margin:0 0 18px}.sh-hero h1,.sh-section-title h2,.sh-space h2,.sh-store h2{font-family:'Noto Serif KR','Iowan Old Style','Baskerville',serif;font-weight:600;letter-spacing:-.045em}.sh-hero h1{font-size:clamp(54px,6vw,100px);line-height:1.05;margin:0;max-width:820px}.sh-hand{font-family:'Brush Script MT','Segoe Script',cursive;color:var(--rust);font-size:clamp(30px,3vw,48px);margin:26px 0 24px;transform:rotate(-2deg);transform-origin:left}.sh-lead{font-size:15px;line-height:1.9;color:#625b53;margin:0 0 30px}.sh-hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}.sh-pill{display:inline-flex;gap:28px;align-items:center;padding:13px 21px;border-radius:999px;background:var(--rust);color:white;text-decoration:none;font-size:11px;font-weight:850;letter-spacing:.08em}.sh-text-link{font-size:12px;font-weight:800;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:4px}.sh-brand-panel{background:var(--green);color:#f7efe4;padding:clamp(48px,6vw,88px);display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.sh-brand-panel:before,.sh-brand-panel:after{content:'';position:absolute;border:1px solid rgba(235,218,186,.16);border-radius:50%;pointer-events:none}.sh-brand-panel:before{width:430px;height:430px;right:-140px;top:-120px}.sh-brand-panel:after{width:240px;height:240px;right:40px;top:80px}.sh-brand-ring{position:relative;z-index:2;display:flex;flex-direction:column;gap:7px}.sh-brand-ring span{font:800 clamp(16px,1.5vw,24px)/1.2 Georgia,serif;letter-spacing:.18em}.sh-brand-ring b{font:400 clamp(72px,8vw,138px)/.9 Georgia,serif;color:#d8c297;letter-spacing:-.06em}.sh-brand-ring small{font-size:10px;font-weight:800;letter-spacing:.18em;opacity:.7}.sh-panel-script{position:relative;z-index:2;font:400 clamp(34px,4vw,62px)/1.05 'Brush Script MT','Segoe Script',cursive;margin:60px 0 28px}.sh-panel-meta{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:10px;font-weight:850;letter-spacing:.18em;padding-top:24px;border-top:1px solid rgba(255,255,255,.18)}.sh-story,.sh-coffee,.sh-community{padding:clamp(78px,8vw,132px) clamp(26px,7vw,120px)}.sh-story{background:var(--paper)}.sh-section-title{max-width:760px;margin-bottom:52px}.sh-section-title>span,.sh-section-title--wide>div>span,.sh-space-copy>span{display:block;color:var(--rust);font:700 12px/1 Georgia,serif;margin-bottom:10px}.sh-section-title h2,.sh-space h2,.sh-store h2{font-size:clamp(36px,4.4vw,68px);line-height:1.12;margin:0}.sh-section-title--wide{max-width:none;display:flex;justify-content:space-between;align-items:flex-end;gap:30px}.sh-story-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.sh-story-grid article{padding:38px clamp(18px,3vw,42px) 42px;border-right:1px solid var(--line);min-height:300px}.sh-story-grid article:last-child{border-right:0}.sh-story-grid b,.sh-note-type{font-size:10px;letter-spacing:.18em;color:var(--rust)}.sh-story-grid h3,.sh-note-grid h3,.sh-community-grid h3{font-family:'Noto Serif KR','Iowan Old Style','Baskerville',serif;font-size:24px;line-height:1.35;margin:30px 0 14px}.sh-story-grid p,.sh-note-grid p,.sh-community-grid p,.sh-space-copy>p,.sh-store>p{font-size:14px;line-height:1.85;color:#665f56}.sh-coffee{background:#efe6d8}.sh-note-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.sh-note-grid article{background:rgba(255,255,255,.55);padding:28px 24px 26px;min-height:300px;border:1px solid rgba(67,47,31,.08);transition:transform .2s,background .2s}.sh-note-grid article:hover{transform:translateY(-4px);background:#fff}.sh-note-grid em{font:400 48px/1 Georgia,serif;color:#b8a58c}.sh-note-type{margin:28px 0 0!important;color:#7b5f48!important}.sh-note-grid h3{margin:12px 0}.sh-meter{height:2px;background:rgba(40,30,20,.12);margin-top:32px;overflow:hidden}.sh-meter i{display:block;width:var(--w);height:100%;background:var(--rust)}.sh-space{display:grid;grid-template-columns:1.15fr .85fr;background:var(--green);color:#f9f2e8}.sh-space-copy{padding:clamp(72px,8vw,126px) clamp(28px,7vw,120px)}.sh-space-copy .sh-label{color:#cdb995}.sh-space-copy>p{color:rgba(255,255,255,.72);max-width:640px;margin:26px 0 30px}.sh-pill--light{background:#f4e8d7;color:var(--green)}.sh-space-info{background:var(--green2);padding:clamp(50px,7vw,100px);display:flex;flex-direction:column;justify-content:center}.sh-space-info>div{padding:28px 0;border-bottom:1px solid rgba(255,255,255,.14)}.sh-space-info>div:last-child{border-bottom:0}.sh-space-info small{display:block;font-size:9px;font-weight:800;letter-spacing:.2em;color:#cdb995;margin-bottom:10px}.sh-space-info strong{font:500 18px/1.55 'Noto Serif KR',serif}.sh-space-info a{text-decoration:none}.sh-community{background:var(--paper2)}.sh-community-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.sh-community-grid article{padding:34px;border:1px solid var(--line);min-height:240px}.sh-community-grid small{font:700 11px Georgia,serif;color:var(--rust)}.sh-store{text-align:center;padding:clamp(90px,10vw,160px) 26px;background:#decbb2;position:relative;overflow:hidden}.sh-store:before,.sh-store:after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.22)}.sh-store:before{width:420px;height:420px;left:-210px;top:-210px}.sh-store:after{width:280px;height:280px;right:-120px;bottom:-140px}.sh-store>*{position:relative;z-index:2}.sh-store p:not(.sh-label){max-width:650px;margin:24px auto 30px}.sh-footer{background:#151812;color:#e9dfcf;padding:46px clamp(24px,6vw,100px);display:flex;justify-content:space-between;align-items:flex-end;gap:30px}.sh-footer strong{font:500 26px Georgia,serif}.sh-footer p{font-size:9px;letter-spacing:.18em;opacity:.6}.sh-footer nav{display:flex;gap:20px;flex-wrap:wrap}.sh-footer a{font-size:11px;text-decoration:none;opacity:.72}.sh-footer a:hover{opacity:1}
-@media(max-width:980px){.sh-ref-header{grid-template-columns:180px 1fr}.sh-ref-visit{display:none}.sh-ref-nav{justify-content:flex-end;gap:20px}.sh-hero{grid-template-columns:1fr}.sh-brand-panel{min-height:440px}.sh-story-grid,.sh-community-grid{grid-template-columns:1fr}.sh-story-grid article{border-right:0;border-bottom:1px solid var(--line);min-height:auto}.sh-story-grid article:last-child{border-bottom:0}.sh-note-grid{grid-template-columns:repeat(2,1fr)}.sh-space{grid-template-columns:1fr}.sh-section-title--wide{display:block}.sh-section-title--wide .sh-text-link{display:inline-block;margin-top:24px}}
-@media(max-width:720px){.sh-ref-header{position:relative;grid-template-columns:1fr;min-height:auto;padding:12px 18px;gap:8px}.sh-ref-brand img{width:160px}.sh-ref-nav{justify-content:flex-start;overflow-x:auto;gap:20px;padding-bottom:2px;scrollbar-width:none}.sh-ref-nav::-webkit-scrollbar{display:none}.sh-ref-nav a{font-size:10px}.sh-hero-copy{padding:58px 24px 64px}.sh-hero h1{font-size:clamp(46px,14vw,70px)}.sh-brand-panel{padding:52px 24px;min-height:420px}.sh-brand-ring b{font-size:92px}.sh-panel-script{font-size:44px}.sh-story,.sh-coffee,.sh-community{padding:70px 22px}.sh-note-grid{grid-template-columns:1fr}.sh-note-grid article{min-height:240px}.sh-space-copy,.sh-space-info{padding:64px 24px}.sh-footer{display:block}.sh-footer nav{margin-top:26px}}
+:root{--ink:#171713;--ivory:#f3ede4;--paper:#f8f4ed;--green:#18271f;--green2:#21372a;--rust:#9f5d38;--line:rgba(31,25,18,.17)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;overflow-x:hidden}a{color:inherit}.sh-ref-header{position:absolute;left:0;right:0;top:0;z-index:30;height:108px;padding:18px clamp(28px,4.8vw,88px);display:grid;grid-template-columns:250px 1fr auto;align-items:center;gap:30px;color:white;background:linear-gradient(180deg,rgba(10,12,9,.42),rgba(10,12,9,0));text-shadow:0 1px 16px rgba(0,0,0,.34)}.sh-ref-brand{display:flex;align-items:center;width:max-content}.sh-ref-brand img{display:block;width:220px;height:auto;filter:drop-shadow(0 3px 12px rgba(0,0,0,.28))}.sh-ref-nav{display:flex;align-items:center;justify-content:center;gap:clamp(25px,3.1vw,52px)}.sh-ref-nav a{text-decoration:none;color:#fff;font:700 12px/1.2 Georgia,'Times New Roman',serif;letter-spacing:.1em;position:relative;padding:14px 0}.sh-ref-nav a:after{content:'';position:absolute;bottom:7px;left:50%;right:50%;height:1px;background:#fff;transition:.2s}.sh-ref-nav a:hover:after,.sh-ref-nav a:focus-visible:after{left:0;right:0}.sh-header-actions{display:flex;align-items:center;gap:8px}.sh-icon-btn{width:46px;height:46px;display:grid;place-items:center;border-radius:999px;background:rgba(10,14,11,.34);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08)}.sh-icon-btn svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}.sh-mobile-menu{position:relative}.sh-mobile-menu summary{width:46px;height:46px;list-style:none;display:grid;place-content:center;gap:5px;border-radius:999px;background:rgba(10,14,11,.34);border:1px solid rgba(255,255,255,.08);cursor:pointer}.sh-mobile-menu summary::-webkit-details-marker{display:none}.sh-mobile-menu summary i{display:block;width:20px;height:1.5px;background:#fff}.sh-mobile-menu nav{position:absolute;right:0;top:55px;width:220px;padding:18px;display:grid;gap:4px;background:rgba(20,28,22,.96);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.28)}.sh-mobile-menu nav a{padding:11px 8px;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.08em}.sh-editorial-home{width:100%;background:var(--paper)}.sh-hero-media{height:min(100svh,980px);min-height:700px;position:relative;background:#2b261f;overflow:hidden}.sh-hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 47%;display:block}.sh-hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,10,8,.28) 0%,rgba(8,10,8,.03) 35%,rgba(8,10,8,.04) 68%,rgba(8,10,8,.47) 100%);pointer-events:none}.sh-hero-foot{position:absolute;left:clamp(28px,4.8vw,88px);right:clamp(28px,4.8vw,88px);bottom:35px;display:flex;align-items:end;justify-content:space-between;color:white;text-shadow:0 1px 12px rgba(0,0,0,.4)}.sh-hero-foot p{margin:0;font-size:10px;font-weight:800;letter-spacing:.2em}.sh-hero-foot a{color:#fff;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.15em;display:flex;gap:16px;align-items:center}.sh-story,.sh-coffee,.sh-community{padding:clamp(78px,9vw,150px) clamp(28px,8vw,150px)}.sh-story{background:var(--ivory)}.sh-eyebrow{display:flex;gap:16px;align-items:center;margin-bottom:32px;color:#775741}.sh-eyebrow span{font:500 14px/1 Georgia,serif}.sh-eyebrow b{font-size:10px;letter-spacing:.18em}.sh-story-head{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.7fr);gap:clamp(40px,9vw,150px);align-items:end;border-bottom:1px solid var(--line);padding-bottom:clamp(48px,6vw,85px)}.sh-story-head h1,.sh-section-intro h2,.sh-space h2,.sh-store h2{font-family:'Noto Serif KR','Iowan Old Style',Georgia,serif;font-weight:500;letter-spacing:-.055em;margin:0}.sh-story-head h1{font-size:clamp(48px,6.2vw,96px);line-height:1.08}.sh-story-head>p{margin:0;color:#5e584f;font-size:15px;line-height:1.95;max-width:520px}.sh-story-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:0}.sh-story-notes article{padding:42px 36px 20px 0;border-right:1px solid var(--line);min-height:230px}.sh-story-notes article+article{padding-left:36px}.sh-story-notes article:last-child{border-right:0}.sh-story-notes small,.sh-menu-grid small,.sh-community-grid small{font-size:10px;letter-spacing:.16em;color:#806248;font-weight:800}.sh-story-notes h2{font:500 26px/1.2 'Noto Serif KR',Georgia,serif;margin:18px 0 12px}.sh-story-notes p{font-size:13px;line-height:1.8;color:#696157;margin:0}.sh-coffee{background:#faf7f1}.sh-section-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:30px;margin-bottom:54px}.sh-section-intro .sh-eyebrow{grid-column:1/-1;margin-bottom:0}.sh-section-intro h2{font-size:clamp(42px,5vw,78px);line-height:1.1}.sh-section-intro>a{font-size:11px;font-weight:800;text-decoration:none;letter-spacing:.08em;border-bottom:1px solid currentColor;padding-bottom:5px}.sh-menu-grid{border-top:1px solid var(--ink)}.sh-menu-grid article{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:24px;align-items:center;padding:30px 4px;border-bottom:1px solid var(--line);transition:padding .25s,background .25s}.sh-menu-grid article:hover{padding-left:18px;padding-right:18px;background:#f0e8dc}.sh-menu-grid article>span{font:400 20px/1 Georgia,serif;color:#9b7658}.sh-menu-grid h3{font:500 clamp(28px,3vw,46px)/1.1 Georgia,'Times New Roman',serif;margin:5px 0 7px}.sh-menu-grid p{margin:0;font-size:13px;color:#686158}.sh-menu-grid em{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.14em;color:#7b5b43}.sh-space{background:var(--green);color:#f4ecdf;min-height:620px;padding:clamp(80px,9vw,150px) clamp(28px,8vw,150px);display:grid;grid-template-columns:1.2fr .8fr;gap:clamp(70px,10vw,170px);align-items:center}.sh-eyebrow--light{color:#c9aa7d}.sh-space h2{font-size:clamp(52px,6vw,96px);line-height:1.02}.sh-space-copy>p{font-size:14px;line-height:1.9;color:#c6c3ba;max-width:560px;margin:28px 0 34px}.sh-outline-btn{display:inline-flex;padding:13px 18px;border:1px solid rgba(255,255,255,.55);border-radius:999px;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.1em}.sh-space-meta{border-top:1px solid rgba(255,255,255,.2)}.sh-space-meta>div{padding:26px 0;border-bottom:1px solid rgba(255,255,255,.14);display:grid;grid-template-columns:115px 1fr;gap:20px}.sh-space-meta small{font-size:9px;letter-spacing:.16em;color:#b59d7c}.sh-space-meta strong{font-size:13px;line-height:1.65;font-weight:500}.sh-space-meta a{text-decoration:none}.sh-community{background:var(--ivory)}.sh-community-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);margin-top:54px}.sh-community-grid article{padding:40px 34px 20px 0;border-right:1px solid var(--line);min-height:240px}.sh-community-grid article+article{padding-left:34px}.sh-community-grid article:last-child{border-right:0}.sh-community-grid h3{font:500 28px/1.2 Georgia,serif;margin:38px 0 15px}.sh-community-grid p{margin:0;max-width:310px;font-size:13px;line-height:1.8;color:#686158}.sh-store{background:#b96640;color:#fff;padding:clamp(82px,10vw,160px) clamp(28px,8vw,150px);text-align:center}.sh-store>p{font-size:10px;letter-spacing:.2em;font-weight:800;margin:0 0 28px}.sh-store h2{font-size:clamp(46px,6vw,92px);line-height:1.08}.sh-store>a{display:inline-flex;align-items:center;gap:30px;margin-top:42px;border:1px solid rgba(255,255,255,.75);border-radius:999px;padding:14px 22px;color:#fff;text-decoration:none;font-size:10px;font-weight:850;letter-spacing:.12em}.sh-footer{background:#111a15;color:#dcd4c8;min-height:190px;padding:52px clamp(28px,8vw,150px);display:flex;justify-content:space-between;align-items:end;gap:40px}.sh-footer strong{font:600 28px/1 Georgia,serif}.sh-footer p{font-size:9px;letter-spacing:.16em;color:#988f83}.sh-footer nav{display:flex;gap:24px;flex-wrap:wrap}.sh-footer nav a{font-size:11px;text-decoration:none;color:#aaa297}.sh-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;pointer-events:none;z-index:999;padding:11px 16px;border-radius:999px;background:#151a16;color:white;font-size:12px;transition:.2s}.sh-toast.is-show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.sh-ref-header{grid-template-columns:190px 1fr auto;padding-inline:28px}.sh-ref-brand img{width:180px}.sh-ref-nav{gap:20px}.sh-ref-nav a{font-size:10px}.sh-story-head{grid-template-columns:1fr;align-items:start}.sh-space{grid-template-columns:1fr}.sh-space-meta{max-width:650px}.sh-hero-image{object-position:56% center}}
+@media(max-width:760px){.sh-ref-header{height:82px;grid-template-columns:1fr auto;padding:12px 18px}.sh-ref-brand img{width:150px}.sh-ref-nav{display:none}.sh-icon-btn{display:none}.sh-mobile-menu summary{width:42px;height:42px}.sh-mobile-menu nav{width:calc(100vw - 36px);right:0}.sh-hero-media{min-height:660px;height:88svh}.sh-hero-image{object-position:64% center}.sh-hero-shade{background:linear-gradient(180deg,rgba(8,10,8,.28),rgba(8,10,8,.02) 45%,rgba(8,10,8,.5))}.sh-hero-foot{left:18px;right:18px;bottom:22px}.sh-hero-foot p{font-size:8px}.sh-story,.sh-coffee,.sh-community{padding:70px 22px}.sh-story-head h1{font-size:48px}.sh-story-notes,.sh-community-grid{grid-template-columns:1fr}.sh-story-notes article,.sh-community-grid article,.sh-story-notes article+article,.sh-community-grid article+article{padding:28px 0;border-right:0;border-bottom:1px solid var(--line);min-height:auto}.sh-section-intro{grid-template-columns:1fr}.sh-section-intro h2{font-size:46px}.sh-menu-grid article{grid-template-columns:44px 1fr;gap:14px}.sh-menu-grid article>em{grid-column:2}.sh-menu-grid h3{font-size:32px}.sh-space{padding:72px 22px;gap:55px}.sh-space h2{font-size:52px}.sh-space-meta>div{grid-template-columns:90px 1fr}.sh-store{padding:80px 22px}.sh-store h2{font-size:46px}.sh-footer{padding:45px 22px;align-items:flex-start;flex-direction:column}.sh-footer nav{gap:14px 20px}}
 `;
 
+const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shin's House — Coffee, People & Better Days</title><meta name="description" content="Shin's House — 부산의 커피와 공간, 그리고 사람들의 이야기."><link rel="stylesheet" href="/editorial.css"></head><body>${home}</body></html>`;
+fs.writeFileSync(path.join(out, 'index.html'), html, 'utf8');
 fs.writeFileSync(path.join(out, 'editorial.css'), css, 'utf8');
 
-const siteUrl = String(process.env.SITE_URL || process.env.URL || 'https://shinshouse.netlify.app').replace(/\/$/, '');
-const description = 'Shin\'s House — 부산에서 매일 마시기 좋은 커피와 오래 곁에 둘 취향을 고릅니다.';
-const head = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shin's House — Good Coffee, Brighter Days</title><meta name="description" content="${description}"><link rel="canonical" href="${siteUrl}/"><meta property="og:type" content="website"><meta property="og:site_name" content="Shin's House"><meta property="og:title" content="Shin's House — Good Coffee, Brighter Days"><meta property="og:description" content="${description}"><meta property="og:url" content="${siteUrl}/"><link rel="stylesheet" href="/editorial.css"></head><body>`;
-const document = `${head}${home}</body></html>`;
-fs.writeFileSync(legacyIndex, document, 'utf8');
-fs.writeFileSync(path.join(out, '404.html'), document, 'utf8');
-
-const sitemapFile = path.join(out, 'sitemap.xml');
-if (fs.existsSync(sitemapFile)) {
-  let sitemap = fs.readFileSync(sitemapFile, 'utf8');
-  if (!sitemap.includes('/shop.html')) sitemap = sitemap.replace('</urlset>', `<url><loc>${siteUrl}/shop.html</loc></url></urlset>`);
-  fs.writeFileSync(sitemapFile, sitemap, 'utf8');
+const sitemap = path.join(out, 'sitemap.xml');
+if (fs.existsSync(sitemap)) {
+  let xml = fs.readFileSync(sitemap, 'utf8');
+  if (!xml.includes('/shop.html')) xml = xml.replace('</urlset>', `<url><loc>https://shinshouse.netlify.app/shop.html</loc></url></urlset>`);
+  fs.writeFileSync(sitemap, xml, 'utf8');
 }
 
-console.log(`Photo-free editorial homepage generated; original shop preserved at /shop.html; logo preserved (${logoBytes.length} bytes)`);
+console.log(`Rebuilt Shin's House homepage from scratch with cinematic hero (${heroBytes.length} bytes); legacy commerce preserved at /shop.html`);
