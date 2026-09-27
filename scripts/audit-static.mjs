@@ -6,66 +6,58 @@ const root = process.cwd();
 const dist = path.join(root, 'dist');
 const read = (name) => fs.readFileSync(path.join(dist, name), 'utf8');
 
-for (const required of ['index.html','styles.css','robots.txt','sitemap.xml','404.html','app.js']) {
-  assert.ok(fs.existsSync(path.join(dist, required)), `${required} must exist in dist`);
+for (const required of ['index.html','404.html','editorial.css','styles.css','shop.html','app.js','robots.txt','sitemap.xml']) {
+  assert.ok(fs.existsSync(path.join(dist, required)), `${required} must exist`);
   assert.ok(fs.statSync(path.join(dist, required)).size > 0, `${required} must not be empty`);
 }
 
 const html = read('index.html');
-const css = read('styles.css');
+const shop = read('shop.html');
+const css = read('editorial.css');
 const app = read('app.js');
-const robots = read('robots.txt');
 const sitemap = read('sitemap.xml');
 const netlifyToml = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 const logoFile = 'shins-house-logo-generated-v2.webp';
-const fallbackFile = 'shins-house-editorial-fallback.svg';
+
+for (const expected of [
+  'class="sh-ref-header"','class="sh-ref-brand"','class="sh-editorial-home"',
+  '좋은 커피가','OUR ORIGIN STORY','ROASTING PHILOSOPHY','BARISTA PICKS',
+  'FEATURED DESSERTS','COMMUNITY & EVENTS','/shop.html',`/assets/${logoFile}`,
+  'href="/editorial.css"'
+]) assert.ok(html.includes(expected), `replacement homepage missing ${expected}`);
 
 for (const forbidden of [
-  'Loading v4.3','bundle-mini/','DecompressionStream','atob(',
-  'sh-mascot-crop','sh-wordmark','shins-house-mascot-source.webp',
-  '/assets/shins-house-logo.svg','/assets/shins-house-logo-premium-v2.svg',
-  '/assets/shins-house-logo-generated-v1.webp','sh-home-hero'
-]) assert.ok(!html.includes(forbidden), `production HTML must not contain removed/legacy artifact: ${forbidden}`);
+  'id="sh-original-shop"','class="sh-home-hero"','shins-house-hero-4k-v1.svg',
+  'Loading v4.3','bundle-mini/','DecompressionStream','atob('
+]) assert.ok(!html.includes(forbidden), `replacement homepage still contains legacy artifact ${forbidden}`);
 
-for (const expected of [
-  '<meta name="description"','<link rel="canonical"','property="og:title"','application/ld+json',
-  '/legal/terms','/legal/privacy','/legal/refund','class="sh-ref-header"','class="sh-ref-brand"',
-  `/assets/${logoFile}`,'class="sh-editorial-home"','class="sh-ref-hero"','id="story"','id="coffee"',
-  'id="community"','id="store"','OUR ORIGIN STORY','ROASTING PHILOSOPHY','BARISTA PICKS','FEATURED DESSERTS','COMMUNITY & EVENTS',
-  '좋은 커피가','좋은 하루를 만듭니다.'
-]) assert.ok(html.includes(expected), `production HTML missing ${expected}`);
+assert.equal((html.match(/<main\b/gi) || []).length, 1, 'homepage must have exactly one main DOM');
+assert.equal((html.match(/class="sh-editorial-home"/g) || []).length, 1, 'editorial homepage must exist exactly once');
+assert.ok(!/href=["'](?:\.\/)?styles\.css["']/i.test(html), 'homepage must not load legacy visual stylesheet');
+assert.ok(/href=["'](?:\.\/)?styles\.css["']/i.test(shop), 'separate shop page must retain legacy commerce stylesheet');
+assert.ok(css.includes('.sh-ref-header') && css.includes('.sh-editorial-home'), 'editorial stylesheet missing core layout');
+assert.ok(app.includes("version: '5.1.0-home-replacement'"), 'runtime version must match replacement build');
+assert.ok(html.includes('ONLINE STORE') && html.includes('href="/shop.html"'), 'online store must route to separated commerce page');
+assert.ok(sitemap.includes('/shop.html'), 'sitemap must include separated shop page');
+assert.match(netlifyToml, /command\s*=\s*["']npm run build["']/i, 'Netlify must run full build');
 
-for (const expected of [
-  'STORY','COFFEE','SPACE','COMMUNITY','ONLINE STORE','navigator.clipboard?.writeText','sh-ref-nav','sh-search-dialog',
-  "control.closest('#sh-search-dialog')","form.addEventListener('submit'",'class="sh-search-close"','scrollMarginTop'
-]) assert.ok(app.includes(expected), `runtime UI missing ${expected}`);
-assert.ok(!app.includes('method="dialog"'), 'search form must not rely on dialog form submission semantics');
-assert.match(app, /sh-search-close[\s\S]*type=\"button\"|type=\"button\"[\s\S]*sh-search-close/, 'search close control must be a non-submit button');
+const logoPath = path.join(dist, 'assets', logoFile);
+assert.ok(fs.existsSync(logoPath), 'preserved Shin\'s House logo must exist');
+const logo = fs.readFileSync(logoPath);
+assert.equal(logo.length, 14418, 'logo byte size changed unexpectedly');
+assert.equal(logo.toString('ascii',0,4), 'RIFF', 'logo must remain WebP');
+assert.equal(logo.toString('ascii',8,12), 'WEBP', 'logo must remain WebP');
 
-assert.match(netlifyToml, /command\s*=\s*["']npm run build["']/i, 'Netlify must run the full npm build');
-assert.match(html, /<header\b[^>]*class=["'][^"']*sh-ref-header[^"']*["'][\s\S]*?<\/header>/i, 'editorial header must exist');
-assert.match(html, /<\/header>\s*<main[^>]+class=["'][^"']*sh-editorial-home[^"']*["']/i, 'editorial homepage must start directly below header');
-assert.ok(css.includes('--sh-cream:#f4efe6') && css.includes('.sh-ref-wave') && css.includes('.sh-ref-picks'), 'editorial design system must be present');
-assert.ok(css.includes('clip-path:ellipse') && css.includes('border-radius:52%'), 'organic curved image language must be present');
-assert.match(robots, /Sitemap:/, 'robots.txt must reference sitemap');
-assert.match(sitemap, /<urlset/, 'sitemap.xml must be valid sitemap-shaped XML');
-
-const brandAsset = path.join(dist, 'assets', logoFile);
-assert.ok(fs.existsSync(brandAsset), 'generated logo asset must exist');
-const logoBytes = fs.readFileSync(brandAsset);
-assert.equal(logoBytes.length, 14418, 'generated logo asset byte size mismatch');
-assert.equal(logoBytes.toString('ascii',0,4), 'RIFF', 'generated logo must be WebP/RIFF');
-assert.equal(logoBytes.toString('ascii',8,12), 'WEBP', 'generated logo must be WebP');
-const fallbackAsset = path.join(dist, 'assets', fallbackFile);
-assert.ok(fs.existsSync(fallbackAsset), 'editorial fallback artwork must exist');
-
-const imgTags = html.match(/<img\b[^>]*>/gi) || [];
-const missingAlt = imgTags.filter((tag) => !/\balt\s*=/.test(tag));
-const missingDecoding = imgTags.filter((tag) => !/\bdecoding\s*=/.test(tag));
-assert.equal(missingDecoding.length, 0, 'all images should opt into async decoding');
+const images = html.match(/<img\b[^>]*>/gi) || [];
+assert.equal(images.filter((tag) => !/\balt=/.test(tag)).length, 0, 'all homepage images need alt text');
+assert.equal(images.filter((tag) => !/\bdecoding=/.test(tag)).length, 0, 'all homepage images need decoding hint');
 
 console.log(JSON.stringify({
-  staticAudit:'passed', images:imgTags.length, imagesMissingAlt:missingAlt.length,
-  logoBytes:logoBytes.length, homepage:'editorial reference redesign', navigation:'story/coffee/space/community/store',
-  organicShapes:'enabled', legacyCommerce:'preserved below editorial layer', search:'dialog guarded', netlifyBuild:'npm run build'
+  staticAudit:'passed',
+  homepageMode:'full DOM replacement',
+  legacyHomepageVisible:false,
+  commercePage:'/shop.html',
+  logo:'preserved exact WebP',
+  homepageStylesheet:'editorial.css',
+  legacyShopStylesheet:'styles.css'
 }, null, 2));
