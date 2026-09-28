@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#1d2a23"><title>Shin's House Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css">
+<link rel="stylesheet" href="/admin.css"><link rel="stylesheet" href="/admin-inventory.css">
 </head>
 <body>
 <section id="login-view" class="login-view">
@@ -24,6 +24,7 @@
     <nav>
       <button data-tab="dashboard" class="active">대시보드</button>
       <button data-tab="products">제품 관리</button>
+      <button data-tab="inventory">재고 관리</button>
       <button data-tab="orders">원두 주문 관리</button>
       <button data-tab="media">홈페이지 이미지</button>
     </nav>
@@ -45,11 +46,18 @@
     </section>
 
     <section class="tab-panel" data-panel="products">
-      <div class="panel-card"><div class="panel-title"><div><p class="eyebrow">PRODUCTS</p><h2>원두 제품 관리</h2><p>가격, 재고, 설명, 대표 이미지를 수정하면 구매 화면에 반영됩니다.</p></div></div><div id="product-list" class="product-list"></div></div>
+      <div class="panel-card"><div class="panel-title"><div><p class="eyebrow">PRODUCTS</p><h2>원두 제품 관리</h2><p>상품명, 가격, 설명, 판매 여부, 대표 이미지를 관리합니다. 재고 수량은 재고 관리 메뉴에서 조정합니다.</p></div></div><div id="product-list" class="product-list"></div></div>
+    </section>
+
+    <section class="tab-panel" data-panel="inventory">
+      <div class="panel-card inventory-panel"><div class="panel-title"><div><p class="eyebrow">INVENTORY</p><h2>실시간 재고 관리</h2><p>입고·폐기·실재고 조정을 기록과 함께 관리합니다. 고객 주문이 접수되면 재고가 자동 차감됩니다.</p></div></div>
+        <div id="inventory-list" class="inventory-list"></div>
+      </div>
+      <div class="panel-card inventory-history-card"><div class="panel-title"><div><p class="eyebrow">STOCK HISTORY</p><h2>최근 재고 변동</h2></div></div><div id="inventory-history" class="inventory-history"></div></div>
     </section>
 
     <section class="tab-panel" data-panel="orders">
-      <div class="order-toolbar"><input id="order-search" type="search" placeholder="주문번호 · 주문자 · 연락처 검색"><select id="order-filter"><option value="all">전체 상태</option></select></div>
+      <div class="order-toolbar"><input id="order-search" type="search" placeholder="주문번호 · 주문자 · 연락처 검색"><select id="order-filter"><option value="all">전체 상태</option></select><a id="orders-csv" class="ghost-button export-button" href="#">CSV 다운로드</a></div>
       <div id="order-list" class="order-list"></div>
     </section>
 
