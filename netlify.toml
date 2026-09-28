@@ -36,14 +36,29 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/app.js"
+  for = "/shop.html"
   [headers.values]
-    Cache-Control = "public, max-age=3600, must-revalidate"
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/styles.css"
+  for = "/home.js"
   [headers.values]
-    Cache-Control = "public, max-age=3600, must-revalidate"
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/editorial.css"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/cart.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/cart.css"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
 
 [[headers]]
   for = "/assets/*"
