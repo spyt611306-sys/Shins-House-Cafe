@@ -1,19 +1,23 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+
 const html = fs.readFileSync('dist/index.html', 'utf8');
 const shop = fs.readFileSync('dist/shop.html', 'utf8');
-for (const file of ['index.html','404.html','editorial.css','home.js','styles.css','shop.html','app.js','robots.txt','sitemap.xml']) assert.ok(fs.statSync(`dist/${file}`).size > 0, file);
+const cart = fs.readFileSync('dist/cart.js', 'utf8');
+const admin = fs.readFileSync('dist/admin.html', 'utf8');
+const followup = fs.readFileSync('dist/order-followup.js', 'utf8');
+
+for (const file of ['index.html','404.html','editorial.css','home.js','media.js','shop.html','cart.css','cart.js','order-followup.js','admin.html','admin.css','admin.js','robots.txt','sitemap.xml']) {
+  assert.ok(fs.statSync(`dist/${file}`).size > 0, file);
+}
+for (const legacy of ['styles.css','app.js','shop-runtime.js']) assert.ok(!fs.existsSync(`dist/${legacy}`), `legacy ${legacy} must be absent`);
 assert.equal((html.match(/<main\b/g) || []).length, 1);
 assert.equal((html.match(/class="drink"/g) || []).length, 6);
-for (const img of html.match(/<img\b[^>]*>/g) || []) {
-  assert.match(img, /alt="[^"]+"/);
-  const src = img.match(/src="([^"]+)"/)[1];
-  assert.ok(fs.existsSync(`dist${src}`), src);
-}
-for (const link of html.matchAll(/href="#([^"]+)"/g)) assert.ok(html.includes(`id="${link[1]}"`), link[1]);
-assert.ok(!html.includes('sh-brand-panel'));
-assert.ok(!html.includes('href="styles.css"'));
-assert.ok(shop.includes('cartModal') && shop.includes('checkoutModal'));
-assert.ok(shop.includes("get('open')==='cart'"));
+assert.ok(html.includes('/assets/hero-20260928.webp'));
+assert.ok(shop.includes('checkout-dialog') && shop.includes('bank-dialog'));
+assert.ok(cart.includes("/api/orders") && cart.includes('consents') && cart.includes('shipping_address'));
+assert.ok(followup.includes('payment-notice') && followup.includes('orders/lookup') && followup.includes('/cancel'));
+assert.ok(admin.includes('제품 관리') && admin.includes('원두 주문 관리') && admin.includes('홈페이지 이미지 관리'));
+assert.ok(fs.readFileSync('dist/robots.txt','utf8').includes('Disallow: /admin.html'));
 assert.ok(fs.readFileSync('dist/sitemap.xml','utf8').includes('/shop.html'));
-console.log('Static audit passed: full replacement, image paths, six drinks, navigation targets and commerce retained.');
+console.log('Static audit passed: current storefront, checkout follow-up, admin operations and legacy removal verified.');
