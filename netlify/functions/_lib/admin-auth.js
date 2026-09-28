@@ -1,74 +1,65 @@
 'use strict';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const crypto = require('crypto');
 
-const allowlist = () => new Set(
-  String(process.env.ADMIN_ALLOWED_EMAILS || '')
-    .split(',')
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean)
-);
+const adminEmail = () => String(process.env.ADMIN_EMAIL || 'admin@shinshouse.local').trim().toLowerCase();
+const adminPassword = () => String(process.env.ADMIN_PASSWORD || '');
+const sessionSecret = () => String(process.env.ADMIN_SESSION_SECRET || '');
+const authConfigured = () => Boolean(adminEmail() && adminPassword() && sessionSecret().length >= 32);
 
-const authConfigured = () => Boolean(SUPABASE_URL && ANON_KEY && allowlist().size > 0);
+const fail = (code, statusCode = 401) => {
+  const error = new Error(code);
+  error.statusCode = statusCode;
+  throw error;
+};
 
-const authRequest = async (path, options = {}) => {
-  if (!authConfigured()) {
-    const error = new Error('ADMIN_AUTH_NOT_CONFIGURED');
-    error.statusCode = 503;
-    throw error;
-  }
+const safeEqual = (a, b) => {
+  const aa = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
+};
 
-  const url = new URL(path, SUPABASE_URL.replace(/\/$/, '') + '/');
-  const headers = {
-    apikey: ANON_KEY,
-    'content-type': 'application/json',
-    accept: 'application/json'
-  };
-  if (options.token) headers.authorization = `Bearer ${options.token}`;
+const b64 = (value) => Buffer.from(typeof value === 'string' ? value : JSON.stringify(value)).toString('base64url');
+const unb64 = (value) => JSON.parse(Buffer.from(value, 'base64url').toString('utf8'));
+const sign = (payload) => crypto.createHmac('sha256', sessionSecret()).update(payload).digest('base64url');
 
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body)
-  });
-  const text = await response.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!response.ok) {
-    const error = new Error(data?.error_description || data?.msg || data?.message || `AUTH_${response.status}`);
-    error.statusCode = response.status;
-    throw error;
-  }
+const issue = (email, type, ttlSeconds) => {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = b64({ sub: email, type, iat: now, exp: now + ttlSeconds, nonce: crypto.randomBytes(10).toString('hex') });
+  return `${payload}.${sign(payload)}`;
+};
+
+const verify = (token, expectedType) => {
+  if (!authConfigured()) fail('ADMIN_AUTH_NOT_CONFIGURED', 503);
+  const [payload, signature] = String(token || '').split('.');
+  if (!payload || !signature || !safeEqual(signature, sign(payload))) fail('ADMIN_AUTH_REQUIRED', 401);
+  let data;
+  try { data = unb64(payload); } catch { fail('ADMIN_AUTH_REQUIRED', 401); }
+  const now = Math.floor(Date.now() / 1000);
+  if (data.type !== expectedType || data.exp < now || String(data.sub || '').toLowerCase() !== adminEmail()) fail('ADMIN_AUTH_REQUIRED', 401);
   return data;
 };
 
-const isAllowed = (email) => allowlist().has(String(email || '').trim().toLowerCase());
-
 const login = async (email, password) => {
-  const data = await authRequest('auth/v1/token?grant_type=password', {
-    method: 'POST',
-    body: { email, password }
-  });
-  if (!isAllowed(data?.user?.email)) {
-    const error = new Error('ADMIN_NOT_ALLOWED');
-    error.statusCode = 403;
-    throw error;
-  }
-  return data;
+  if (!authConfigured()) fail('ADMIN_AUTH_NOT_CONFIGURED', 503);
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!safeEqual(normalized, adminEmail()) || !safeEqual(String(password || ''), adminPassword())) fail('ADMIN_NOT_ALLOWED', 403);
+  return {
+    access_token: issue(normalized, 'access', 60 * 60 * 8),
+    refresh_token: issue(normalized, 'refresh', 60 * 60 * 24 * 30),
+    expires_in: 60 * 60 * 8,
+    user: { id: 'shinshouse-admin', email: normalized }
+  };
 };
 
 const refresh = async (refreshToken) => {
-  const data = await authRequest('auth/v1/token?grant_type=refresh_token', {
-    method: 'POST',
-    body: { refresh_token: refreshToken }
-  });
-  if (!isAllowed(data?.user?.email)) {
-    const error = new Error('ADMIN_NOT_ALLOWED');
-    error.statusCode = 403;
-    throw error;
-  }
-  return data;
+  const data = verify(refreshToken, 'refresh');
+  return {
+    access_token: issue(data.sub, 'access', 60 * 60 * 8),
+    refresh_token: issue(data.sub, 'refresh', 60 * 60 * 24 * 30),
+    expires_in: 60 * 60 * 8,
+    user: { id: 'shinshouse-admin', email: data.sub }
+  };
 };
 
 const bearer = (event) => {
@@ -79,30 +70,14 @@ const bearer = (event) => {
 
 const requireAdmin = async (event) => {
   const token = bearer(event);
-  if (!token) {
-    const error = new Error('ADMIN_AUTH_REQUIRED');
-    error.statusCode = 401;
-    throw error;
-  }
-  const user = await authRequest('auth/v1/user', { token });
-  if (!isAllowed(user?.email)) {
-    const error = new Error('ADMIN_NOT_ALLOWED');
-    error.statusCode = 403;
-    throw error;
-  }
-  return { user, token };
+  if (!token) fail('ADMIN_AUTH_REQUIRED', 401);
+  const data = verify(token, 'access');
+  return { user: { id: 'shinshouse-admin', email: data.sub }, token };
 };
 
 const logout = async (event) => {
-  const { token } = await requireAdmin(event);
-  await authRequest('auth/v1/logout', { method: 'POST', token });
+  await requireAdmin(event);
   return true;
 };
 
-module.exports = {
-  authConfigured,
-  login,
-  refresh,
-  requireAdmin,
-  logout
-};
+module.exports = { authConfigured, login, refresh, requireAdmin, logout };
