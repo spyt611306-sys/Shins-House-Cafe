@@ -22,7 +22,6 @@ const enabled = (key, fallback = false) => {
 };
 const cleanText = (value, max = 300) => String(value || '').trim().slice(0, max);
 const normalizePhone = (value) => String(value || '').replace(/\D+/g, '').slice(0, 20);
-const money = (value) => `${new Intl.NumberFormat('ko-KR').format(Number(value || 0))}원`;
 const nowIso = () => new Date().toISOString();
 
 let blobsPromise;
@@ -38,8 +37,16 @@ const parseBody = (event) => {
   catch { const error = new Error('INVALID_JSON'); error.statusCode = 400; throw error; }
 };
 
+const actionSecret = () => env('ACTION_TOKEN_SECRET') || env('ADMIN_SESSION_SECRET') || `${env('ADMIN_PASSWORD')}|shinshouse-orders-v1`;
+const readiness = () => {
+  const blockers = [];
+  if (!enabled('COMMERCE_ENABLED', true)) blockers.push('COMMERCE_DISABLED');
+  if (!env('ADMIN_PASSWORD') && !env('ACTION_TOKEN_SECRET') && !env('ADMIN_SESSION_SECRET')) blockers.push('ACTION_TOKEN_SECRET_MISSING');
+  return blockers;
+};
+
 const settings = () => ({
-  commerce_ready: enabled('COMMERCE_ENABLED', true),
+  commerce_ready: readiness().length === 0,
   shipping_fee_setting: Number(env('SHIPPING_FEE', '3000')) || 3000,
   free_shipping_threshold: Number(env('FREE_SHIPPING_THRESHOLD', '50000')) || 50000,
   business_name: env('BUSINESS_NAME', '신스하우스'),
@@ -90,7 +97,6 @@ const listOrders = async (limit = 500) => {
   return orders.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 };
 
-const actionSecret = () => env('ACTION_TOKEN_SECRET') || env('ADMIN_SESSION_SECRET');
 const signAction = (orderId, phone) => crypto.createHmac('sha256', actionSecret()).update(`${orderId}|${phone}`).digest('base64url');
 const actionToken = (orderId, phone) => `${orderId}.${signAction(orderId, phone)}`;
 const verifyActionToken = (token, orderId, phone) => {
@@ -114,13 +120,6 @@ const customerFrom = (body) => ({
 });
 
 const consentTrue = (body, key) => body?.consents?.[key] === true || body?.[`${key}_agreed`] === true || body?.[`agree_${key}`] === true;
-
-const readiness = () => {
-  const blockers = [];
-  if (!enabled('COMMERCE_ENABLED', true)) blockers.push('COMMERCE_DISABLED');
-  if (!actionSecret()) blockers.push('ACTION_TOKEN_SECRET_MISSING');
-  return blockers;
-};
 
 const createOrder = async (event) => {
   const blockers = readiness();
@@ -261,6 +260,7 @@ const orderAction = async (event, orderNumberValue, action) => {
     if (order.status !== '입금 대기') return json(409, { ok: false, code: 'ORDER_NOT_CANCELLABLE', message: '현재 상태에서는 고객 취소가 어렵습니다.' });
     await restoreOrderStock(order);
     order.status = '주문 취소';
+    order.stock_returned = true;
     order.updated_at = nowIso();
     await saveOrder(order);
     return json(200, { ok: true, status: order.status, message: '주문이 취소되었습니다.' });
@@ -285,7 +285,7 @@ exports.handler = async (event) => {
     }
     if (method === 'GET' && route === 'health/ready') {
       const blockers = readiness();
-      return json(200, { ok: blockers.length === 0, version: '5.2.0', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
+      return json(200, { ok: blockers.length === 0, version: '5.2.1', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
     }
     if (method === 'GET' && route === 'policies') return json(200, {});
     if (method === 'POST' && route === 'orders') return await createOrder(event);
