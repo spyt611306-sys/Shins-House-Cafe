@@ -27,8 +27,8 @@ const json = (statusCode, body, extraHeaders = {}) => ({
 });
 
 const fallbackProducts = [
-  { id: 1, name: '하우스 블렌드 200g', category: 'coffee', description: '고소한 단맛과 편안한 여운을 담은 데일리 블렌드', price: 18000, stock: 24, low_stock_threshold: 3, image: 'assets/asset-11-7ec3ab46.webp', active: true, sort_order: 1 },
-  { id: 2, name: '나이트 디카페인 200g', category: 'coffee', description: '부드러운 단맛과 낮은 카페인으로 늦은 시간에도 편안한 커피', price: 21000, stock: 18, low_stock_threshold: 3, image: 'assets/asset-12-67790ddf.webp', active: true, sort_order: 2 },
+  // Preview availability only; commerce stays disabled until a real stock catalog is configured.
+  ...require('./_lib/bean-catalog.json'),
   { id: 3, name: '클래식 크림 머그', category: 'goods', description: '매일 편하게 사용할 수 있는 크림 컬러 머그', price: 19000, stock: 12, low_stock_threshold: 3, image: 'assets/asset-08-409f9713.webp', active: true, sort_order: 3 },
   { id: 4, name: '신스하우스 선물 세트', category: 'gift', description: '원두와 커피 오브젝트를 함께 구성한 선물 세트', price: 39000, stock: 9, low_stock_threshold: 3, image: 'assets/asset-07-dbd7b39f.webp', active: true, sort_order: 4 }
 ];
@@ -115,7 +115,11 @@ const loadCatalog = async () => {
       rest('products', { query: { select: 'id,name,category,description,price,stock,low_stock_threshold,image,active,sort_order', active: 'eq.true', order: 'sort_order.asc' } }),
       rest('subscription_plans', { query: { select: 'id,name,description,price,quantity_label,delivery_cycle,shipping_fee,subscriber_limit,active,sort_order', order: 'sort_order.asc' } })
     ]);
-    return { products, plans, source: 'supabase' };
+    const galleryCatalog = require('./_lib/bean-catalog.json');
+    return { products: products.map(product => {
+      const match = galleryCatalog.find(item => item.id === product.id && item.name === product.name);
+      return match ? { ...product, gallery: [product.image, ...match.gallery.slice(1)] } : product;
+    }), plans, source: 'supabase' };
   } catch (error) {
     console.error('[catalog fallback]', error.message);
     return { products: fallbackProducts, plans: fallbackPlans, source: 'fallback' };
