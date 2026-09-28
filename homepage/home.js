@@ -84,6 +84,19 @@
   };
 
   const beanProducts = document.querySelector('#bean-products');
+  const gallery = document.querySelector('#bean-gallery');
+  const galleryStatus = document.querySelector('#bean-gallery-status');
+  const picker = document.querySelector('.bean-picker');
+  const mobileLayout = matchMedia('(max-width: 640px)');
+  function placeProductPicker() {
+    const reference = mobileLayout.matches
+      ? document.querySelector('.bean-visual-stage')
+      : document.querySelector('.bean-order .form-block');
+    if (reference !== picker) reference.before(picker);
+  }
+  placeProductPicker();
+  mobileLayout.addEventListener('change', placeProductPicker);
+
   const beanImage = document.querySelector('#bean-product-image');
   const beanNote = document.querySelector('#bean-product-note');
   const beanStock = document.querySelector('#bean-stock');
@@ -132,11 +145,11 @@
       button.className = `bean-product-option${selected ? ' selected' : ''}`;
       button.dataset.beanProduct = product.id;
       button.setAttribute('aria-pressed', String(selected));
-      button.disabled = Number(product.stock || 0) < 1;
+      const soldOut = Number(product.stock || 0) < 1;
       const name = document.createElement('span');
       name.textContent = product.name || '원두';
       const price = document.createElement('strong');
-      price.textContent = button.disabled ? '품절' : money(product.price);
+      price.textContent = soldOut ? '품절' : money(product.price);
       button.append(name, price);
       button.addEventListener('click', () => selectBeanProduct(product.id));
       beanProducts.append(button);
@@ -172,14 +185,47 @@
     beanAdd.textContent = stock > 0 ? '장바구니 담고 주문하기 ↗' : '현재 품절';
   }
 
+  function renderBeanGallery(product) {
+    const images = [...new Set([product.image, ...(Array.isArray(product.gallery) ? product.gallery : [])].filter(Boolean))];
+    const labels = ['상품 소개', '원두 이야기', '추천과 즐기는 방법'];
+    gallery.replaceChildren();
+    gallery.hidden = images.length < 2;
+    function selectImage(index) {
+      beanImage.src = productImageUrl(images[index]);
+      beanImage.alt = `${product.name} — ${labels[index] || `상세 이미지 ${index + 1}`}`;
+      [...gallery.children].forEach((button, current) => {
+        button.classList.toggle('selected', current === index);
+        button.setAttribute('aria-pressed', String(current === index));
+      });
+      galleryStatus.textContent = `${product.name} 이미지 ${index + 1} / ${images.length}`;
+    }
+    images.forEach((src, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'bean-thumbnail';
+      button.setAttribute('aria-label', `${product.name} ${labels[index] || `상세 이미지 ${index + 1}`} 보기`);
+      const image = document.createElement('img');
+      image.src = productImageUrl(src);
+      image.alt = '';
+      image.width = 80;
+      image.height = 100;
+      image.decoding = 'async';
+      const label = document.createElement('span');
+      label.textContent = labels[index] || `상세 ${index + 1}`;
+      button.append(image, label);
+      button.addEventListener('click', () => selectImage(index));
+      gallery.append(button);
+    });
+    selectImage(0);
+  }
+
   function selectBeanProduct(id) {
     const product = beanState.products.find(item => String(item.id) === String(id));
     if (!product) return;
     beanState.selected = product;
     const stock = Math.max(0, Number(product.stock || 0));
     if (stock > 0 && beanState.quantity > stock) beanState.quantity = 1;
-    beanImage.src = productImageUrl(product.image);
-    beanImage.alt = `${product.name} 원두 상품`;
+    renderBeanGallery(product);
     beanNote.textContent = product.name;
     description.textContent = product.description || '직접 고르고 볶은 신스하우스의 원두입니다.';
     renderBeanProductOptions();
