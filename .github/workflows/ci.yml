@@ -25,8 +25,18 @@ jobs:
       - name: Verify generated files
         run: |
           test -s dist/index.html
-          test -s dist/styles.css
+          test -s dist/editorial.css
+          test -s dist/home.js
+          test -s dist/shop.html
+          test -s dist/cart.js
+          test -s dist/order-followup.js
+          test -s dist/admin.html
+          test -s dist/admin.js
           test -s dist/robots.txt
           test -s dist/sitemap.xml
           test "$(find dist/assets -type f | wc -l)" -ge 10
+          test ! -e dist/styles.css
+          test ! -e dist/app.js
+          test ! -e dist/shop-runtime.js
           ! grep -q "Loading v4.3" dist/index.html
+          ! grep -q "Coffee & Objects" dist/shop.html
