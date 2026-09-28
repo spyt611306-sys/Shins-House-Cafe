@@ -1,0 +1,53 @@
+[
+  {
+    "id": 5,
+    "name": "에티오피아 싱글",
+    "category": "coffee",
+    "description": "꽃향과 복숭아, 시트러스의 산뜻한 여운",
+    "price": 27000,
+    "stock": 20,
+    "low_stock_threshold": 3,
+    "image": "assets/ethiopia-single-1.webp",
+    "gallery": [
+      "assets/ethiopia-single-1.webp",
+      "assets/ethiopia-single-2.webp",
+      "assets/ethiopia-single-3.webp"
+    ],
+    "active": true,
+    "sort_order": 1
+  },
+  {
+    "id": 6,
+    "name": "고소 블랜딩",
+    "category": "coffee",
+    "description": "고소한 견과류와 초콜릿, 흑설탕의 편안한 균형",
+    "price": 22000,
+    "stock": 20,
+    "low_stock_threshold": 3,
+    "image": "assets/goso-blending-1.webp",
+    "gallery": [
+      "assets/goso-blending-1.webp",
+      "assets/goso-blending-2.webp",
+      "assets/goso-blending-3.webp"
+    ],
+    "active": true,
+    "sort_order": 2
+  },
+  {
+    "id": 7,
+    "name": "다크 블랜딩",
+    "category": "coffee",
+    "description": "깊은 로스팅과 다크초콜릿의 진한 풍미",
+    "price": 22000,
+    "stock": 20,
+    "low_stock_threshold": 3,
+    "image": "assets/dark-blending-1.webp",
+    "gallery": [
+      "assets/dark-blending-1.webp",
+      "assets/dark-blending-2.webp",
+      "assets/dark-blending-3.webp"
+    ],
+    "active": true,
+    "sort_order": 3
+  }
+]
