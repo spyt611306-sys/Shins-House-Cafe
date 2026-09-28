@@ -10,6 +10,24 @@
   force = true
 
 [[redirects]]
+  from = "/api/site-content"
+  to = "/.netlify/functions/content?route=site-content"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/site-content/*"
+  to = "/.netlify/functions/content?route=:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/media/*"
+  to = "/.netlify/functions/content?route=media/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/admin/*"
   to = "/.netlify/functions/admin?route=:splat"
   status = 200
@@ -41,7 +59,18 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
   for = "/home.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/media.js"
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
 
@@ -57,6 +86,16 @@
 
 [[headers]]
   for = "/cart.css"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/admin.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/admin.css"
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
 
