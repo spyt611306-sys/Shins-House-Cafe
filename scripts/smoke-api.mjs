@@ -33,6 +33,15 @@ const bootstrapBody = bodyJson(bootstrap);
 assert.equal(bootstrapBody.settings.commerce_ready, false, 'commerce must fail closed without secrets');
 assert.ok(Array.isArray(bootstrapBody.products) && bootstrapBody.products.length > 0, 'catalog fallback must render');
 
+const beans = bootstrapBody.products.filter(product => product.category === 'coffee');
+assert.deepEqual(beans.map(({ name, price }) => ({ name, price })), [
+  { name: '에티오피아 싱글', price: 27000 },
+  { name: '고소 블랜딩', price: 22000 },
+  { name: '다크 블랜딩', price: 22000 }
+], 'homepage and store must share the requested three-bean catalog');
+assert.ok(beans.every(product => ![1, 2].includes(product.id)), 'retired cart IDs must never silently become a different bean');
+assert.ok(beans.every(product => product.gallery.length === 3 && product.gallery[0] === product.image), 'each bean must expose its own three-image gallery');
+
 const ready = await api(event('GET', 'health/ready'));
 assert.equal(ready.statusCode, 200, 'readiness endpoint must be observable');
 const readyBody = bodyJson(ready);
