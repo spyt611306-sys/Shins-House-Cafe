@@ -462,6 +462,8 @@ async function bootstrap() {
   fillSite();
   renderProducts();
   renderCartCount();
+  // The homepage can open the cart before the asynchronous catalog has loaded.
+  renderCart();
   initHero();
   initReveal();
   $$('.hero-slide img, .story-section img, .visit-section img').forEach(imageFallback);
