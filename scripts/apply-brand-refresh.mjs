@@ -17,7 +17,7 @@ for (const file of fs.readdirSync(path.join(homepage, 'assets'))) {
   fs.writeFileSync(path.join(assetsOut, file.slice(0, -4)), bytes);
 }
 
-for (const file of ['index.html','editorial.css','home.js','media.js','shop.html','cart.css','cart.js','order-followup.js','admin.html','admin.css','admin.js']) {
+for (const file of ['index.html','editorial.css','home.js','media.js','shop.html','cart.css','cart.js','order-followup.js','admin.html','admin.css','admin-inventory.css','admin.js']) {
   fs.copyFileSync(path.join(homepage, file), path.join(out, file));
 }
 
@@ -37,4 +37,4 @@ fs.writeFileSync(path.join(out, 'shop.html'), shop);
 fs.writeFileSync(path.join(out, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /admin.html\nSitemap: ${siteUrl}/sitemap.xml\n`, 'utf8');
 fs.writeFileSync(path.join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc></url><url><loc>${siteUrl}/shop.html</loc></url><url><loc>${siteUrl}/legal/terms</loc></url><url><loc>${siteUrl}/legal/privacy</loc></url><url><loc>${siteUrl}/legal/refund</loc></url></urlset>\n`, 'utf8');
 
-console.log('Published Shin’s House homepage, purchase flow, managed media and admin dashboard.');
+console.log('Published Shin’s House homepage, live ordering, managed media and inventory admin dashboard.');
