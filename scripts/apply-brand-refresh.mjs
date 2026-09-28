@@ -1,28 +1,47 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist');
-// Keep the existing commerce document, then replace the homepage in full.
-const legacy = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
-const runtimeStart = legacy.indexOf("<script>'use strict';const $ =");
-if (runtimeStart < 0) throw new Error('Expected legacy runtime boundary not found');
-const shop = legacy.slice(0, runtimeStart).replace('<script src="app.js"></script>', '') + '<script src="/shop-runtime.js" defer></script></body></html>';
-fs.copyFileSync(path.join(root, 'homepage', 'shop-runtime.js'), path.join(out, 'shop-runtime.js'));
-const cartBridge = `<script>document.addEventListener('DOMContentLoaded',()=>{if(new URLSearchParams(location.search).get('open')==='cart')document.querySelector('.cart-trigger')?.click()});</script>`;
-fs.writeFileSync(path.join(out, 'shop.html'), shop.replace('</body>', `${cartBridge}</body>`));
-for (const file of fs.readdirSync(path.join(root, 'homepage', 'assets'))) {
-  if (!/^[a-z0-9-]+\.webp\.b64$/.test(file)) continue;
-  const bytes = Buffer.from(fs.readFileSync(path.join(root, 'homepage', 'assets', file), 'utf8'), 'base64');
-  fs.writeFileSync(path.join(out, 'assets', file.slice(0, -4)), bytes);
+const assetsOut = path.join(out, 'assets');
+const homepage = path.join(root, 'homepage');
+
+// The bundle-mini payload is kept only as a historical build input. Nothing from
+// its legacy consumer storefront is allowed to survive in the final deployment.
+for (const legacyFile of ['styles.css', 'app.js', 'shop-runtime.js']) {
+  fs.rmSync(path.join(out, legacyFile), { force: true });
 }
-for (const file of ['index.html', 'editorial.css', 'home.js']) fs.copyFileSync(path.join(root, 'homepage', file), path.join(out, file));
+
+// Remove stale legacy product/hero assets so old cached screens cannot be linked
+// from the current deployment, then rebuild the public asset set from homepage/.
+fs.rmSync(assetsOut, { recursive: true, force: true });
+fs.mkdirSync(assetsOut, { recursive: true });
+for (const file of fs.readdirSync(path.join(homepage, 'assets'))) {
+  if (!/^[a-z0-9-]+\.webp\.b64$/.test(file)) continue;
+  const bytes = Buffer.from(fs.readFileSync(path.join(homepage, 'assets', file), 'utf8'), 'base64');
+  fs.writeFileSync(path.join(assetsOut, file.slice(0, -4)), bytes);
+}
+
+for (const file of ['index.html', 'editorial.css', 'home.js', 'shop.html', 'cart.css', 'cart.js']) {
+  fs.copyFileSync(path.join(homepage, file), path.join(out, file));
+}
+
 const siteUrl = String(process.env.SITE_URL || process.env.URL || 'https://shinshouse.netlify.app').replace(/\/$/, '');
 let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
-html = html.replace('</head>', `<link rel="canonical" href="${siteUrl}/"><meta property="og:title" content="Shin's House"><meta property="og:description" content="신스하우스의 커피와 공간"><meta property="og:url" content="${siteUrl}/"></head>`);
+if (!html.includes('rel="canonical"')) {
+  html = html.replace('</head>', `<link rel="canonical" href="${siteUrl}/"><meta property="og:title" content="Shin's House"><meta property="og:description" content="직접 고르고 직접 볶는 신스하우스 로스터리"><meta property="og:url" content="${siteUrl}/"></head>`);
+}
 fs.writeFileSync(path.join(out, 'index.html'), html);
 fs.writeFileSync(path.join(out, '404.html'), html);
-let sitemap = fs.readFileSync(path.join(out, 'sitemap.xml'), 'utf8');
-if (!sitemap.includes('/shop.html')) sitemap = sitemap.replace('</urlset>', `<url><loc>${siteUrl}/shop.html</loc></url></urlset>`);
-fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap);
-console.log('Replaced homepage with supplied hero, transparent header and six Library drink cutouts.');
+
+let shop = fs.readFileSync(path.join(out, 'shop.html'), 'utf8');
+if (!shop.includes('rel="canonical"')) {
+  shop = shop.replace('</head>', `<link rel="canonical" href="${siteUrl}/shop.html"></head>`);
+}
+fs.writeFileSync(path.join(out, 'shop.html'), shop);
+
+fs.writeFileSync(path.join(out, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`, 'utf8');
+fs.writeFileSync(path.join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc></url><url><loc>${siteUrl}/shop.html</loc></url><url><loc>${siteUrl}/legal/terms</loc></url><url><loc>${siteUrl}/legal/privacy</loc></url><url><loc>${siteUrl}/legal/refund</loc></url></urlset>\n`, 'utf8');
+
+console.log('Published clean Shin’s House homepage + current cart/store; legacy storefront removed.');
