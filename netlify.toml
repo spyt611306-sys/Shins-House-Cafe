@@ -85,6 +85,11 @@
     Cache-Control = "no-cache, must-revalidate"
 
 [[headers]]
+  for = "/order-followup.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
   for = "/cart.css"
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
