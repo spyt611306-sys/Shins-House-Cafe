@@ -59,7 +59,14 @@ async function api(url, options = {}, retried = false) {
     const token = adminAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
-  const response = await fetch(url, { credentials: 'same-origin', ...options, headers });
+  let response = await fetch(url, { credentials: 'same-origin', ...options, headers });
+  if (response.status === 404 && url.startsWith('/api/')) {
+    const target = new URL(url, window.location.origin);
+    const admin = target.pathname.startsWith('/api/admin/');
+    const route = target.pathname.slice(admin ? '/api/admin/'.length : '/api/'.length);
+    target.searchParams.set('route', route);
+    response = await fetch(`/.netlify/functions/${admin ? 'admin' : 'api'}?${target.searchParams}`, { credentials: 'same-origin', ...options, headers });
+  }
   if (response.status === 401 && url.startsWith('/api/admin/') && !retried && !url.endsWith('/login') && !url.endsWith('/refresh')) {
     if (await refreshAdminSession()) return api(url, options, true);
   }
