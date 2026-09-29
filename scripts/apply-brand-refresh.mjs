@@ -8,13 +8,31 @@ const assetsOut = path.join(out, 'assets');
 const homepage = path.join(root, 'homepage');
 const brandSource = path.join(root, 'brand-source');
 
-// @netlify/blobs requires the options-object form when store-wide strong consistency is used.
-// Patch the deployed Functions in the build workspace so catalog, inventory, orders and media
-// all use the current API even if an older source snapshot used the legacy two-argument form.
+// Netlify Functions should always use a durable named Blobs store. CONTEXT is a build-time
+// variable and is not guaranteed to be present when a deployed Function executes, so falling
+// back to getDeployStore() at runtime can make production catalog reads fail with HTTP 500.
+// Normalize all commerce/content stores to the current options-object getStore() API before
+// Netlify bundles the Functions.
 for (const relative of ['netlify/functions/api.js', 'netlify/functions/admin.js', 'netlify/functions/content.mjs']) {
   const file = path.join(root, relative);
   let source = fs.readFileSync(file, 'utf8');
   source = source
+    .replace(
+      "return production() ? getStore('shins-house-commerce', { consistency: 'strong' }) : getDeployStore('shins-house-commerce');",
+      "return getStore({ name: 'shins-house-commerce', consistency: 'strong' });"
+    )
+    .replace(
+      "return production() ? getStore({ name: 'shins-house-commerce', consistency: 'strong' }) : getDeployStore('shins-house-commerce');",
+      "return getStore({ name: 'shins-house-commerce', consistency: 'strong' });"
+    )
+    .replace(
+      "return production() ? getStore(name, { consistency: 'strong' }) : getDeployStore(name);",
+      "return getStore({ name, consistency: 'strong' });"
+    )
+    .replace(
+      "return production() ? getStore({ name, consistency: 'strong' }) : getDeployStore(name);",
+      "return getStore({ name, consistency: 'strong' });"
+    )
     .replace("getStore('shins-house-commerce', { consistency: 'strong' })", "getStore({ name: 'shins-house-commerce', consistency: 'strong' })")
     .replace("getStore('shins-house-content', { consistency: 'strong' })", "getStore({ name: 'shins-house-content', consistency: 'strong' })")
     .replace("getStore('shins-house-media', { consistency: 'strong' })", "getStore({ name: 'shins-house-media', consistency: 'strong' })");
