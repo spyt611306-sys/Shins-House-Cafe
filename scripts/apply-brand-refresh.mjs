@@ -46,6 +46,13 @@ for (const file of ['index.html','editorial.css','experience.css','home.js','exp
   fs.copyFileSync(path.join(homepage, file), path.join(out, file));
 }
 
+let experience = fs.readFileSync(path.join(out, 'experience.js'), 'utf8');
+experience = experience.replace(
+  "const secondary = document.createElement('img');",
+  "const secondary = document.createElement('img');\n    secondary.src = '/assets/hero-cafe-v2.webp';"
+);
+fs.writeFileSync(path.join(out, 'experience.js'), experience);
+
 const siteUrl = String(process.env.SITE_URL || process.env.URL || 'https://shinshouse.netlify.app').replace(/\/$/, '');
 let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 if (!html.includes('rel="canonical"')) html = html.replace('</head>', `<link rel="canonical" href="${siteUrl}/"><meta property="og:title" content="Shin's House"><meta property="og:description" content="직접 고르고 직접 볶는 신스하우스 로스터리"><meta property="og:url" content="${siteUrl}/"></head>`);
