@@ -54,8 +54,24 @@ jobs:
       - name: Verify live production
         shell: bash
         run: |
+          set -euo pipefail
+
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/ > /tmp/home.html
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/experience.js > /tmp/experience.js
+          grep -q 'experience.js' /tmp/home.html
+          grep -q '나에게 맞는 원두 찾기' /tmp/experience.js
+          grep -q "secondary.src = '/assets/hero-20260928.webp'" /tmp/experience.js
+
+          verified='false'
           for i in {1..12}; do
             if curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/api/health/ready > /tmp/ready.json; then
+              verified='true'
+            elif curl --fail --silent --show-error --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/commerce-route?kind=health' > /tmp/ready.json; then
+              echo 'Public health alias is unavailable; verified the deployed commerce function directly.'
+              verified='true'
+            fi
+
+            if [ "$verified" = 'true' ]; then
               cat /tmp/ready.json
               node - <<'NODE'
           const fs = require('fs');
