@@ -16,11 +16,24 @@
 <div class="header-actions"><button class="icon-button header-search" id="search-open" type="button" aria-label="메뉴 검색"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="10.5"/><path d="m21 21 9 9"/></svg></button><a class="icon-button" href="/shop.html?open=cart" aria-label="장바구니"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 9h22l-2 19H7L5 9Zm6 1V7a5 5 0 0 1 10 0v3"/></svg></a><button class="icon-button" id="menu-open" type="button" aria-label="전체 메뉴 열기" aria-expanded="false" aria-controls="navigation-dialog"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 10h26M3 22h26"/></svg></button></div>
 </header>
 <main id="top">
-<section class="hero" aria-label="신스하우스 메인 사진"><img class="hero-image" src="/assets/hero-20260928.webp" alt="신스하우스 카페 메인 이미지" width="1780" height="883" fetchpriority="high" decoding="async"></section>
+<section class="hero" aria-label="신스하우스 메인 사진"><img class="hero-image active" src="/assets/hero-20260928.webp" alt="신스하우스 로스터리의 첫 번째 풍경" width="1780" height="883" fetchpriority="high" decoding="async"><img class="hero-image" src="/assets/hero-second-20260930.webp" alt="햇살이 드는 신스하우스 카페와 커피" width="1536" height="864" decoding="async"><div class="hero-controls" role="group" aria-label="메인 사진 선택"><button type="button" data-hero-slide="0" class="active" aria-label="첫 번째 사진 보기" aria-pressed="true"></button><button type="button" data-hero-slide="1" aria-label="두 번째 사진 보기" aria-pressed="false"></button></div></section>
 <div class="hero-caption">
 <div><p class="eyebrow">SHIN’S HOUSE ROASTERY</p><h1>직접 고르고, 직접 볶습니다.</h1><p class="hero-copy">부산의 로스터리에서, 당신의 일상으로.</p></div>
-<div class="hero-links"><a class="primary-btn" href="#bean-store">원두 구매 <span aria-hidden="true">↗</span></a><a class="text-link" href="#coffee">메뉴 보기 <span aria-hidden="true">↗</span></a></div>
+<div class="hero-links"><a class="primary-btn" href="#bean-store">원두 구매 <span aria-hidden="true">↗</span></a><a class="text-link" href="#coffee-finder">내 원두 찾기 <span aria-hidden="true">↗</span></a></div>
 </div>
+<section class="finder-section" id="coffee-finder" aria-labelledby="finder-title">
+<div class="finder-shell">
+<div class="finder-panel">
+  <div class="finder-intro"><p class="finder-kicker">✦ &nbsp; COFFEE FINDER</p><h2 id="finder-title">나에게 맞는 원두 찾기</h2><p>몇 가지 취향을 알려주세요.<br>당신의 커피 한 잔에 어울리는 원두를 골라드립니다.</p><div class="finder-intro-actions"><button type="button" class="finder-start" id="finder-start">테스트 시작하기 <span aria-hidden="true">→</span></button><span>약 1분 소요</span></div></div>
+  <div class="finder-quiz" aria-label="커피 취향 질문"><div class="finder-progress"><span id="finder-count">1/8</span><div role="progressbar" id="finder-progress" aria-label="테스트 진행률" aria-valuemin="1" aria-valuemax="8" aria-valuenow="1"><span></span></div></div><div class="finder-question"><p class="finder-question-number" id="finder-question-number">Q1</p><div><h3 id="finder-question-title">평소 커피를 마시는 스타일은 어떤가요?</h3><div class="finder-options" id="finder-options" role="group" aria-label="답변 선택"></div></div></div><div class="finder-question-actions"><button type="button" id="finder-back" class="finder-back" disabled>← <span>이전</span></button><button type="button" id="finder-next" class="finder-next" disabled>다음 <span aria-hidden="true">→</span></button></div></div>
+  <ol class="finder-steps" aria-label="테스트 단계"><li class="current">커피 스타일</li><li>맛의 선호도</li><li>산미/고소함</li><li>바디감</li><li>향의 취향</li><li>마시는 시간</li><li>음식 페어링</li><li>최종 추천</li></ol>
+</div>
+<div class="finder-preview"><div class="finder-preview-heading"><h2>추천 원두 미리보기</h2><p>당신의 취향에 맞는 세 가지 원두를 소개합니다.</p></div><div class="preview-grid">
+  <a class="preview-card" href="#bean-store" data-preview-bean="5"><img src="/assets/ethiopia-single-1.webp" alt="에티오피아 싱글 원두 패키지" loading="lazy"><div><h3>에티오피아 싱글 <span>산미</span></h3><p>화사한 산미와 과일향이 돋보이는 스페셜티 싱글 오리진</p><strong>27,000원</strong></div><span class="preview-arrow" aria-hidden="true">→</span></a>
+  <a class="preview-card" href="#bean-store" data-preview-bean="6"><img src="/assets/goso-blending-1.webp" alt="고소 블랜딩 원두 패키지" loading="lazy"><div><h3>고소 블랜딩 <span>고소함</span></h3><p>부드럽고 고소한 균형 잡힌 맛, 일상에 가장 잘 어울리는 블랜딩</p><strong>22,000원</strong></div><span class="preview-arrow" aria-hidden="true">→</span></a>
+  <a class="preview-card" href="#bean-store" data-preview-bean="7"><img src="/assets/dark-blending-1.webp" alt="다크 블랜딩 원두 패키지" loading="lazy"><div><h3>다크 블랜딩 <span>묵직함</span></h3><p>진한 바디감과 깊은 풍미, 묵직한 여운의 다크 블랜딩</p><strong>22,000원</strong></div><span class="preview-arrow" aria-hidden="true">→</span></a>
+</div></div>
+</div></section>
 <section class="bean-store section-shell" id="bean-store" aria-labelledby="bean-title">
 <div class="section-topline"><p class="eyebrow">THE HOUSE SELECTION</p><span class="section-number">01 / BEANS</span></div>
 <div class="bean-panel">
