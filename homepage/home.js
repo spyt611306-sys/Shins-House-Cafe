@@ -18,10 +18,10 @@
 
   const finderQuestions = [
     { title: '평소 커피를 마시는 스타일은 어떤가요?', options: [
-      ['뜨겁게 마시는 것이 좋아요', 'americano-hot.webp', [0, 1, 2]],
-      ['아이스로 자주 마셔요', 'americano-iced.webp', [2, 1, 0]],
-      ['우유가 들어간 커피를 좋아해요', 'cafe-latte.webp', [0, 2, 1]],
-      ['그때그때 달라요', 'cappuccino.webp', [1, 1, 1]]
+      ['따뜻하게 마셔요', 'americano-hot.webp', [0, 1, 2]],
+      ['아이스를 즐겨요', 'americano-iced.webp', [2, 1, 0]],
+      ['라떼가 좋아요', 'cafe-latte.webp', [0, 2, 1]],
+      ['기분 따라 달라요', 'cappuccino.webp', [1, 1, 1]]
     ] },
     { title: '가장 끌리는 맛은 무엇인가요?', options: [
       ['꽃과 과일처럼 화사한 맛', '', [3, 0, 0]], ['고소하고 부드러운 맛', '', [0, 3, 0]], ['진하고 쌉싸름한 맛', '', [0, 0, 3]], ['균형 잡힌 맛', '', [0, 2, 1]]
