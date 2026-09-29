@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 15
     env:
       NETLIFY_SITE_ID: 2d6505d3-6549-4ba8-9b33-e738c5981974
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN || secrets.NETLIFY_TOKEN || secrets.NETLIFY_ACCESS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,10 +27,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Verify production build
         run: npm run check
@@ -39,7 +38,8 @@ jobs:
         shell: bash
         run: |
           if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
-            echo "NETLIFY_AUTH_TOKEN repository secret is not configured."
+            echo "No Netlify deployment token was found in repository secrets."
+            echo "Expected one of: NETLIFY_AUTH_TOKEN, NETLIFY_TOKEN, NETLIFY_ACCESS_TOKEN"
             exit 1
           fi
 
