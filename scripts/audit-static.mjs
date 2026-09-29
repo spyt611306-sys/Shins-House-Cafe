@@ -14,10 +14,12 @@ for (const legacy of ['styles.css','app.js','shop-runtime.js']) assert.ok(!fs.ex
 assert.equal((html.match(/<main\b/g) || []).length, 1);
 assert.equal((html.match(/class="drink"/g) || []).length, 6);
 assert.ok(html.includes('/assets/hero-20260928.webp'));
+assert.ok(fs.existsSync('dist/assets/hero-cafe-v2.webp'));
+assert.ok(fs.statSync('dist/assets/hero-cafe-v2.webp').size > 12000);
 assert.ok(html.includes('/experience.css') && html.includes('/experience.js'));
 assert.ok(experience.includes('나에게 맞는 원두 찾기'));
 assert.ok(experience.includes('8문항 · 약 1분'));
-assert.ok(experience.includes("secondary.src = '/assets/hero-20260928.webp'"));
+assert.ok(experience.includes("secondary.src = '/assets/hero-cafe-v2.webp'"));
 assert.ok(shop.includes('checkout-dialog') && shop.includes('bank-dialog'));
 assert.ok(cart.includes('/api/orders') && cart.includes('consents') && cart.includes('shipping_address'));
 assert.ok(followup.includes('payment-notice') && followup.includes('orders/lookup') && followup.includes('/cancel'));
@@ -25,4 +27,4 @@ assert.ok(admin.includes('제품 관리') && admin.includes('재고 관리') && 
 assert.ok(adminJs.includes('/adjust') && adminJs.includes('absolute_stock') && adminJs.includes('inventory_logs'));
 assert.ok(fs.readFileSync('dist/robots.txt','utf8').includes('Disallow: /admin.html'));
 assert.ok(fs.readFileSync('dist/sitemap.xml','utf8').includes('/shop.html'));
-console.log('Static audit passed: taste finder, active hero, live checkout, order follow-up and inventory admin verified.');
+console.log('Static audit passed: taste finder, alternate hero, live checkout, order follow-up and inventory admin verified.');
