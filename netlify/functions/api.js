@@ -37,11 +37,9 @@ const parseBody = (event) => {
   catch { const error = new Error('INVALID_JSON'); error.statusCode = 400; throw error; }
 };
 
-const actionSecret = () => env('ACTION_TOKEN_SECRET') || env('ADMIN_SESSION_SECRET') || `${env('ADMIN_PASSWORD')}|shinshouse-orders-v1`;
 const readiness = () => {
   const blockers = [];
   if (!enabled('COMMERCE_ENABLED', true)) blockers.push('COMMERCE_DISABLED');
-  if (!env('ADMIN_PASSWORD') && !env('ACTION_TOKEN_SECRET') && !env('ADMIN_SESSION_SECRET')) blockers.push('ACTION_TOKEN_SECRET_MISSING');
   return blockers;
 };
 
@@ -97,11 +95,19 @@ const listOrders = async (limit = 500) => {
   return orders.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 };
 
-const signAction = (orderId, phone) => crypto.createHmac('sha256', actionSecret()).update(`${orderId}|${phone}`).digest('base64url');
-const actionToken = (orderId, phone) => `${orderId}.${signAction(orderId, phone)}`;
-const verifyActionToken = (token, orderId, phone) => {
-  const expected = actionToken(orderId, phone);
-  const aa = Buffer.from(String(token || ''));
+const createActionToken = () => crypto.randomBytes(32).toString('base64url');
+const ensureActionToken = async (order) => {
+  if (order.action_token) return order.action_token;
+  order.action_token = createActionToken();
+  order.updated_at = nowIso();
+  await saveOrder(order);
+  return order.action_token;
+};
+const verifyActionToken = (token, order) => {
+  const expected = String(order.action_token || '');
+  const actual = String(token || '');
+  if (!expected || !actual) return false;
+  const aa = Buffer.from(actual);
   const bb = Buffer.from(expected);
   return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
 };
@@ -149,7 +155,10 @@ const createOrder = async (event) => {
   const idem = await s.get(`idempotency/${signature}`, { type: 'json' });
   if (idem && Date.now() - Number(idem.created_at || 0) < 10 * 60 * 1000) {
     const existing = await getOrder(idem.order_id);
-    if (existing) return json(201, orderResponse(existing, true));
+    if (existing) {
+      await ensureActionToken(existing);
+      return json(201, orderResponse(existing, true));
+    }
   }
 
   const originalProducts = products.map(({ gallery, ...p }) => ({ ...p }));
@@ -173,6 +182,7 @@ const createOrder = async (event) => {
     status: '입금 대기',
     tracking_number: '',
     payment_notice_at: null,
+    action_token: createActionToken(),
     consent_at: nowIso(),
     created_at: nowIso(),
     updated_at: nowIso(),
@@ -197,7 +207,7 @@ const orderResponse = (order, replay) => {
   return {
     order_id: order.order_number,
     public_token: '',
-    action_token: actionToken(order.id, order.phone_normalized),
+    action_token: String(order.action_token || ''),
     status: order.status,
     subtotal: order.subtotal,
     shipping_fee: order.shipping_fee,
@@ -220,6 +230,7 @@ const lookupOrders = async (event) => {
   const customer = customerFrom(body);
   if (!customer.name || customer.phone.length < 9) return json(400, { ok: false, code: 'INVALID_LOOKUP', message: '주문자명과 휴대전화를 확인해 주세요.' });
   const orders = (await listOrders(300)).filter(order => order.customer_name === customer.name && order.phone_normalized === customer.phone).slice(0, 20);
+  await Promise.all(orders.map(order => ensureActionToken(order)));
   return json(200, {
     orders: orders.map(order => ({
       order_id: order.order_number,
@@ -231,7 +242,7 @@ const lookupOrders = async (event) => {
       payment_notice_at: order.payment_notice_at,
       consent_at: order.consent_at,
       created_at: order.created_at,
-      action_token: actionToken(order.id, order.phone_normalized),
+      action_token: String(order.action_token || ''),
       items: (order.order_items || []).map(item => ({ product_id: item.product_id, name: item.product_name, price: item.unit_price, quantity: item.quantity, line_total: item.line_total }))
     })),
     subscriptions: []
@@ -254,7 +265,7 @@ const orderAction = async (event, orderNumberValue, action) => {
   const orders = await listOrders(500);
   const order = orders.find(item => item.order_number === orderNumberValue);
   if (!order) return json(404, { ok: false, code: 'ORDER_NOT_FOUND', message: '주문을 찾지 못했습니다.' });
-  if (!verifyActionToken(body.action_token, order.id, order.phone_normalized)) return json(403, { ok: false, code: 'INVALID_ACTION_TOKEN', message: '주문 확인 정보가 올바르지 않습니다.' });
+  if (!verifyActionToken(body.action_token, order)) return json(403, { ok: false, code: 'INVALID_ACTION_TOKEN', message: '주문 확인 정보가 올바르지 않습니다.' });
 
   if (action === 'cancel') {
     if (order.status !== '입금 대기') return json(409, { ok: false, code: 'ORDER_NOT_CANCELLABLE', message: '현재 상태에서는 고객 취소가 어렵습니다.' });
@@ -291,7 +302,7 @@ exports.handler = async (event) => {
     }
     if (method === 'GET' && route === 'health/ready') {
       const blockers = readiness();
-      return json(200, { ok: blockers.length === 0, version: '5.2.2', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
+      return json(200, { ok: blockers.length === 0, version: '5.2.3', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
     }
     if (method === 'GET' && route === 'policies') return json(200, {});
     if (method === 'POST' && route === 'orders') return await createOrder(event);
