@@ -33,29 +33,28 @@
   status = 200
   force = true
 
-# Netlify redirect substitutions can lose nested slash segments in query values.
-# Keep customer/order health routes on flat internal route names before the generic API rewrite.
+# Explicit rewrites preserve nested route names for Netlify Functions.
 [[redirects]]
   from = "/api/health/ready"
-  to = "/.netlify/functions/api?route=health-ready"
+  to = "/.netlify/functions/api?route=health%2Fready"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/lookup"
-  to = "/.netlify/functions/api?route=orders-lookup"
+  to = "/.netlify/functions/api?route=orders%2Flookup"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/:order/payment-notice"
-  to = "/.netlify/functions/api?route=order-action&action=payment-notice&order=:order"
+  to = "/.netlify/functions/api?route=orders%2F:order%2Fpayment-notice"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/:order/cancel"
-  to = "/.netlify/functions/api?route=order-action&action=cancel&order=:order"
+  to = "/.netlify/functions/api?route=orders%2F:order%2Fcancel"
   status = 200
   force = true
 
