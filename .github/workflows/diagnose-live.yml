@@ -18,7 +18,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          curl --fail-with-body --silent --show-error --max-time 20 'https://shinshouse.netlify.app/api/bootstrap' > /tmp/before.json
+          COMMERCE='https://shinshouse.netlify.app/.netlify/functions/commerce'
+          curl --fail-with-body --silent --show-error --max-time 20 "${COMMERCE}?route=bootstrap" > /tmp/before.json
           STOCK_BEFORE=$(node -e "const d=require('/tmp/before.json');const p=d.products.find(x=>Number(x.id)===5);if(!p)process.exit(2);process.stdout.write(String(p.stock));")
 
           TEST_ADDRESS="시스템 테스트 배송지 ${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
@@ -36,7 +37,7 @@ jobs:
           curl --fail-with-body --silent --show-error --max-time 20 \
             -X POST -H 'Content-Type: application/json' \
             --data-binary @/tmp/order-payload.json \
-            'https://shinshouse.netlify.app/api/orders' > /tmp/order.json
+            "${COMMERCE}?route=orders" > /tmp/order.json
 
           node - <<'NODE'
           const fs = require('fs');
@@ -56,10 +57,10 @@ jobs:
           curl --fail-with-body --silent --show-error --max-time 20 \
             -X POST -H 'Content-Type: application/json' \
             --data-binary @/tmp/cancel-payload.json \
-            "https://shinshouse.netlify.app/api/orders/${ORDER_ID}/cancel" > /tmp/cancel.json
+            "${COMMERCE}?route=orders/${ORDER_ID}/cancel" > /tmp/cancel.json
           node -e "const d=require('/tmp/cancel.json');if(!d.ok||d.status!=='주문 취소')process.exit(7)"
 
-          curl --fail-with-body --silent --show-error --max-time 20 'https://shinshouse.netlify.app/api/bootstrap' > /tmp/after.json
+          curl --fail-with-body --silent --show-error --max-time 20 "${COMMERCE}?route=bootstrap" > /tmp/after.json
           STOCK_AFTER=$(node -e "const d=require('/tmp/after.json');const p=d.products.find(x=>Number(x.id)===5);if(!p)process.exit(8);process.stdout.write(String(p.stock));")
           if [ "$STOCK_BEFORE" != "$STOCK_AFTER" ]; then
             echo "Stock rollback failed: before=$STOCK_BEFORE after=$STOCK_AFTER"
