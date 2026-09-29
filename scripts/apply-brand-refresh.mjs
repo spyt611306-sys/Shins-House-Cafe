@@ -64,6 +64,16 @@ for (const file of ['index.html','editorial.css','experience.css','home.js','exp
   fs.copyFileSync(path.join(homepage, file), path.join(out, file));
 }
 
+// Public /api/* aliases can be unavailable during some Netlify redirect states. Keep the
+// storefront failover on the modern commerce function so bootstrap, order creation, lookup,
+// payment notice and cancellation continue to use durable Netlify Blobs storage.
+for (const file of ['home.js', 'cart.js', 'order-followup.js']) {
+  const target = path.join(out, file);
+  let source = fs.readFileSync(target, 'utf8');
+  source = source.replaceAll('/.netlify/functions/api?route=', '/.netlify/functions/commerce?route=');
+  fs.writeFileSync(target, source);
+}
+
 let experience = fs.readFileSync(path.join(out, 'experience.js'), 'utf8');
 experience = experience.replace(
   "const secondary = document.createElement('img');",
