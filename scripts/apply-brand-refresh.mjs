@@ -16,7 +16,11 @@ for (const relative of ['netlify/functions/api.js', 'netlify/functions/admin.js'
   let source = fs.readFileSync(file, 'utf8');
   source = source
     .replace("getStore('shins-house-commerce', { consistency: 'strong' })", "getStore({ name: 'shins-house-commerce', consistency: 'strong' })")
-    .replace("getStore('shins-house-content', { consistency: 'strong' })", "getStore({ name: 'shins-house-content', consistency: 'strong' })");
+    .replace("getStore('shins-house-content', { consistency: 'strong' })", "getStore({ name: 'shins-house-content', consistency: 'strong' })")
+    .replace("getStore('shins-house-media', { consistency: 'strong' })", "getStore({ name: 'shins-house-media', consistency: 'strong' })");
+  if (relative.endsWith('content.mjs')) {
+    source = source.replace("hero_secondary: '',", "hero_secondary: '/assets/hero-cafe-v2.webp',");
+  }
   fs.writeFileSync(file, source);
 }
 
@@ -41,10 +45,6 @@ fs.writeFileSync(path.join(assetsOut, 'hero-cafe-v2.webp'), alternateHeroBytes);
 for (const file of ['index.html','editorial.css','experience.css','home.js','experience.js','media.js','shop.html','cart.css','cart.js','order-followup.js','admin.html','admin.css','admin-inventory.css','admin.js']) {
   fs.copyFileSync(path.join(homepage, file), path.join(out, file));
 }
-
-let experience = fs.readFileSync(path.join(out, 'experience.js'), 'utf8');
-experience = experience.replace("secondary.src = '/assets/hero-20260928.webp';", "secondary.src = '/assets/hero-cafe-v2.webp';");
-fs.writeFileSync(path.join(out, 'experience.js'), experience);
 
 const siteUrl = String(process.env.SITE_URL || process.env.URL || 'https://shinshouse.netlify.app').replace(/\/$/, '');
 let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
