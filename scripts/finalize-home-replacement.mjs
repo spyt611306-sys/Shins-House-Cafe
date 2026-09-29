@@ -23,11 +23,12 @@ assert.ok(home.includes('/experience.css'), 'Homepage must load experience.css')
 assert.ok(home.includes('/experience.js'), 'Homepage must load experience.js');
 assert.ok(experience.includes('나에게 맞는 원두 찾기'), 'Taste finder trigger is required');
 assert.ok(experience.includes('questions.length'), 'Taste finder questions are required');
-assert.ok(experience.includes("secondary.src = '/assets/hero-cafe-v2.webp'"), 'Second hero slide must use the cafe artwork');
+assert.ok(experience.includes('media.hero_secondary'), 'Second hero slide must use the configurable secondary hero media slot');
+assert.ok(experience.includes('6500'), 'Hero rotation interval must remain active');
 assert.ok(shop.includes('/cart.css'));
 assert.ok(shop.includes('/cart.js'));
 assert.ok(!fs.existsSync('dist/shop-runtime.js'), 'Legacy shop runtime must not be published');
 assert.ok(!fs.existsSync('dist/styles.css'), 'Legacy stylesheet must not be published');
 assert.ok(!fs.existsSync('dist/app.js'), 'Legacy app runtime must not be published');
 
-console.log('Verified homepage taste finder, active hero rotation and clean cart/store build.');
+console.log('Verified homepage taste finder, configurable active hero rotation and clean cart/store build.');
