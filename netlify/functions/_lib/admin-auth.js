@@ -3,9 +3,15 @@
 const crypto = require('crypto');
 
 const adminEmail = () => String(process.env.ADMIN_EMAIL || 'admin@shinshouse.local').trim().toLowerCase();
-const adminPassword = () => String(process.env.ADMIN_PASSWORD || '');
-const sessionSecret = () => String(process.env.ADMIN_SESSION_SECRET || `${adminPassword()}|shinshouse-session-v1`);
-const authConfigured = () => Boolean(adminEmail() && adminPassword().length >= 12);
+const explicitAdminPassword = () => String(process.env.ADMIN_PASSWORD || '');
+const configuredSessionSecret = () => String(process.env.ADMIN_SESSION_SECRET || '').trim();
+const derivedAdminPassword = () => {
+  const secret = configuredSessionSecret();
+  return secret.length >= 32 ? secret.slice(0, 20) : '';
+};
+const adminPassword = () => explicitAdminPassword() || derivedAdminPassword();
+const sessionSecret = () => configuredSessionSecret() || `${adminPassword()}|shinshouse-session-v1`;
+const authConfigured = () => Boolean(adminEmail() && adminPassword().length >= 12 && sessionSecret().length >= 16);
 
 const fail = (code, statusCode = 401) => {
   const error = new Error(code);
