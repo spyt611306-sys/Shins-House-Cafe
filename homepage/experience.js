@@ -1,14 +1,32 @@
 (() => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function initHeroRotation() {
+  async function loadHeroMedia() {
+    try {
+      let response = await fetch('/api/site-content', { headers: { Accept: 'application/json' } });
+      if (response.status === 404) response = await fetch('/.netlify/functions/content?route=site-content', { headers: { Accept: 'application/json' } });
+      if (!response.ok) return {};
+      const body = await response.json();
+      return body?.media || {};
+    } catch {
+      return {};
+    }
+  }
+
+  async function initHeroRotation() {
     const hero = document.querySelector('.hero');
     const primary = hero?.querySelector('.hero-image');
     if (!hero || !primary) return;
     primary.classList.add('hero-slide', 'is-active');
+
+    const media = await loadHeroMedia();
+    const secondarySrc = String(media.hero_secondary || '').trim();
+    const primarySrc = String(media.hero || primary.getAttribute('src') || '').trim();
+    if (!secondarySrc || new URL(secondarySrc, location.origin).href === new URL(primarySrc, location.origin).href) return;
+
     const secondary = document.createElement('img');
     secondary.className = 'hero-image hero-slide hero-slide-secondary';
-    secondary.src = '/assets/hero-20260928.webp';
+    secondary.src = secondarySrc;
     secondary.alt = '햇살이 들어오는 신스하우스 카페와 커피';
     secondary.width = 1780;
     secondary.height = 883;
@@ -44,7 +62,7 @@
       pause.setAttribute('aria-label', paused ? '메인 이미지 자동 전환 재생' : '메인 이미지 자동 전환 일시정지');
       start();
     });
-    secondary.addEventListener('error', () => { secondary.remove(); dots[1]?.remove(); stop(); }, { once: true });
+    secondary.addEventListener('error', () => { secondary.remove(); controls.remove(); stop(); }, { once: true });
     hero.addEventListener('mouseenter', stop);
     hero.addEventListener('mouseleave', start);
     hero.addEventListener('focusin', stop);
