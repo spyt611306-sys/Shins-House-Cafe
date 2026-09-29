@@ -1,0 +1,27 @@
+name: Diagnose Shin's House live APIs
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe live commerce APIs
+        shell: bash
+        run: |
+          echo '=== HEALTH ==='
+          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/commerce-route?kind=health' || true
+          echo
+          echo '=== BOOTSTRAP ==='
+          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/api?route=bootstrap' || true
+          echo
+          echo '=== SITE CONTENT ==='
+          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/content?route=site-content' || true
+          echo
+          echo '=== ADMIN CONFIG PROBE ==='
+          curl --silent --show-error --include --max-time 20 -X POST -H 'Content-Type: application/json' -d '{"email":"invalid@example.com","password":"invalid"}' 'https://shinshouse.netlify.app/.netlify/functions/admin?route=login' || true
