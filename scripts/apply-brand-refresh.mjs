@@ -6,6 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist');
 const assetsOut = path.join(out, 'assets');
 const homepage = path.join(root, 'homepage');
+const brandSource = path.join(root, 'brand-source');
 
 for (const legacyFile of ['styles.css', 'app.js', 'shop-runtime.js']) fs.rmSync(path.join(out, legacyFile), { force: true });
 
@@ -17,9 +18,21 @@ for (const file of fs.readdirSync(path.join(homepage, 'assets'))) {
   fs.writeFileSync(path.join(assetsOut, file.slice(0, -4)), bytes);
 }
 
+const alternateHeroParts = ['hero-cafe-v2.part01', 'hero-cafe-v2.part02', 'hero-cafe-v2.part03'];
+const alternateHeroBase64 = alternateHeroParts.map(file => fs.readFileSync(path.join(brandSource, file), 'utf8').trim()).join('');
+const alternateHeroBytes = Buffer.from(alternateHeroBase64, 'base64');
+if (alternateHeroBytes.length < 12000 || alternateHeroBytes.subarray(0, 4).toString('ascii') !== 'RIFF' || alternateHeroBytes.subarray(8, 12).toString('ascii') !== 'WEBP') {
+  throw new Error('Alternate Shin’s House hero artwork is invalid.');
+}
+fs.writeFileSync(path.join(assetsOut, 'hero-cafe-v2.webp'), alternateHeroBytes);
+
 for (const file of ['index.html','editorial.css','experience.css','home.js','experience.js','media.js','shop.html','cart.css','cart.js','order-followup.js','admin.html','admin.css','admin-inventory.css','admin.js']) {
   fs.copyFileSync(path.join(homepage, file), path.join(out, file));
 }
+
+let experience = fs.readFileSync(path.join(out, 'experience.js'), 'utf8');
+experience = experience.replace("secondary.src = '/assets/hero-20260928.webp';", "secondary.src = '/assets/hero-cafe-v2.webp';");
+fs.writeFileSync(path.join(out, 'experience.js'), experience);
 
 const siteUrl = String(process.env.SITE_URL || process.env.URL || 'https://shinshouse.netlify.app').replace(/\/$/, '');
 let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
