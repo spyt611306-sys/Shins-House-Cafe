@@ -33,6 +33,32 @@
   status = 200
   force = true
 
+# Netlify redirect substitutions can lose nested slash segments in query values.
+# Keep customer/order health routes on flat internal route names before the generic API rewrite.
+[[redirects]]
+  from = "/api/health/ready"
+  to = "/.netlify/functions/api?route=health-ready"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/orders/lookup"
+  to = "/.netlify/functions/api?route=orders-lookup"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/orders/:order/payment-notice"
+  to = "/.netlify/functions/api?route=order-action&action=payment-notice&order=:order"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/orders/:order/cancel"
+  to = "/.netlify/functions/api?route=order-action&action=cancel&order=:order"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api?route=:splat"
@@ -66,6 +92,16 @@
 
 [[headers]]
   for = "/home.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/experience.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/experience.css"
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
 
