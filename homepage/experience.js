@@ -8,10 +8,10 @@
     primary.classList.add('hero-slide', 'is-active');
     const secondary = document.createElement('img');
     secondary.className = 'hero-image hero-slide hero-slide-secondary';
-    secondary.src = '/assets/hero-golden-morning.webp';
+    secondary.src = '/assets/hero-20260928.webp';
     secondary.alt = '햇살이 들어오는 신스하우스 카페와 커피';
-    secondary.width = 2048;
-    secondary.height = 1152;
+    secondary.width = 1780;
+    secondary.height = 883;
     secondary.decoding = 'async';
     secondary.loading = 'eager';
     hero.append(secondary);
