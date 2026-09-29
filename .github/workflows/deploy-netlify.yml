@@ -58,9 +58,11 @@ jobs:
 
           curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/ > /tmp/home.html
           curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/experience.js > /tmp/experience.js
+          curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/assets/hero-cafe-v2.webp > /tmp/hero-cafe-v2.webp
           grep -q 'experience.js' /tmp/home.html
           grep -q '나에게 맞는 원두 찾기' /tmp/experience.js
-          grep -q "secondary.src = '/assets/hero-20260928.webp'" /tmp/experience.js
+          grep -q "secondary.src = '/assets/hero-cafe-v2.webp'" /tmp/experience.js
+          test "$(wc -c < /tmp/hero-cafe-v2.webp)" -gt 12000
 
           verified='false'
           for i in {1..12}; do
@@ -79,8 +81,35 @@ jobs:
           if (data.storage !== 'netlify-blobs') process.exit(2);
           if (data.commerce_ready !== true) process.exit(3);
           NODE
-              exit 0
+              break
             fi
             sleep 5
           done
-          exit 1
+          [ "$verified" = 'true' ] || exit 1
+
+          curl --fail --silent --show-error --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/api?route=bootstrap' > /tmp/bootstrap.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/bootstrap.json', 'utf8'));
+          const products = (data.products || []).filter(p => p.category === 'coffee' && p.active !== false);
+          const expected = new Map([['에티오피아 싱글',27000],['고소 블랜딩',22000],['다크 블랜딩',22000]]);
+          if (products.length !== 3) process.exit(4);
+          for (const product of products) {
+            if (!expected.has(product.name) || Number(product.price) !== expected.get(product.name)) process.exit(5);
+          }
+          if (data.settings?.commerce_ready !== true) process.exit(6);
+          NODE
+
+          admin_status=$(curl --silent --output /tmp/admin-login.json --write-out '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' -d '{"email":"invalid@example.com","password":"invalid"}' 'https://shinshouse.netlify.app/.netlify/functions/admin?route=login')
+          if [ "$admin_status" = '503' ]; then
+            cat /tmp/admin-login.json
+            echo 'Admin authentication is not configured.'
+            exit 7
+          fi
+          if [ "$admin_status" != '403' ] && [ "$admin_status" != '401' ]; then
+            cat /tmp/admin-login.json
+            echo "Unexpected admin login probe status: $admin_status"
+            exit 8
+          fi
+
+          echo 'Production verification passed: hero rotation, taste finder, live catalog, commerce readiness and admin authentication are active.'
