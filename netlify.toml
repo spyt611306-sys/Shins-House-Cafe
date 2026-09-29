@@ -33,28 +33,28 @@
   status = 200
   force = true
 
-# Explicit rewrites preserve nested route names for Netlify Functions.
+# Nested commerce routes use a flat adapter so Netlify never needs to preserve slashes inside query values.
 [[redirects]]
   from = "/api/health/ready"
-  to = "/.netlify/functions/api?route=health%2Fready"
+  to = "/.netlify/functions/commerce-route?kind=health"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/lookup"
-  to = "/.netlify/functions/api?route=orders%2Flookup"
+  to = "/.netlify/functions/commerce-route?kind=lookup"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/:order/payment-notice"
-  to = "/.netlify/functions/api?route=orders%2F:order%2Fpayment-notice"
+  to = "/.netlify/functions/commerce-route?kind=action&action=payment-notice&order=:order"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/orders/:order/cancel"
-  to = "/.netlify/functions/api?route=orders%2F:order%2Fcancel"
+  to = "/.netlify/functions/commerce-route?kind=action&action=cancel&order=:order"
   status = 200
   force = true
 
