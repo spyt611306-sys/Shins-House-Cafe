@@ -74,6 +74,11 @@ for (const file of ['home.js', 'cart.js', 'order-followup.js']) {
   fs.writeFileSync(target, source);
 }
 
+const adminTarget = path.join(out, 'admin.js');
+let adminSource = fs.readFileSync(adminTarget, 'utf8');
+adminSource = adminSource.replaceAll('/.netlify/functions/admin?route=', '/.netlify/functions/admin-modern?route=');
+fs.writeFileSync(adminTarget, adminSource);
+
 let experience = fs.readFileSync(path.join(out, 'experience.js'), 'utf8');
 experience = experience.replace(
   "const secondary = document.createElement('img');",
