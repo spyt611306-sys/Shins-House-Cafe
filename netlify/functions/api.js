@@ -274,9 +274,15 @@ const orderAction = async (event, orderNumberValue, action) => {
   return json(200, { ok: true, status: order.status, message: '입금 확인 요청이 접수되었습니다.' });
 };
 
+const decodeRoute = (value) => {
+  let route = String(value || '');
+  try { route = decodeURIComponent(route); } catch {}
+  return route.replace(/^\/+|\/+$/g, '');
+};
+
 exports.handler = async (event) => {
   const method = (event.httpMethod || 'GET').toUpperCase();
-  const route = String(event.queryStringParameters?.route || '').replace(/^\/+|\/+$/g, '');
+  const route = decodeRoute(event.queryStringParameters?.route);
 
   try {
     if (method === 'GET' && route === 'bootstrap') {
@@ -285,7 +291,7 @@ exports.handler = async (event) => {
     }
     if (method === 'GET' && route === 'health/ready') {
       const blockers = readiness();
-      return json(200, { ok: blockers.length === 0, version: '5.2.1', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
+      return json(200, { ok: blockers.length === 0, version: '5.2.2', commerce_ready: blockers.length === 0, storage: 'netlify-blobs', blockers });
     }
     if (method === 'GET' && route === 'policies') return json(200, {});
     if (method === 'POST' && route === 'orders') return await createOrder(event);
