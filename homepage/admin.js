@@ -4,9 +4,9 @@
   const ACCESS_KEY = 'shins_admin_access_v52';
   const REFRESH_KEY = 'shins_admin_refresh_v52';
   const money = v => new Intl.NumberFormat('ko-KR').format(Number(v || 0)) + '원';
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const mediaLabels = {
-    hero: '메인 Hero 이미지', logo: '헤더 로고', americano_hot: '아메리카노 HOT', americano_iced: '아이스 아메리카노',
+    hero: '메인 Hero 첫 번째 이미지', hero_secondary: '메인 Hero 두 번째 이미지', logo: '헤더 로고', americano_hot: '아메리카노 HOT', americano_iced: '아이스 아메리카노',
     cafe_latte: '카페라떼', cappuccino: '카푸치노', vanilla_latte: '바닐라라떼', cream_coffee: '크림 커피'
   };
   const state = { data: null, media: {}, token: sessionStorage.getItem(ACCESS_KEY) || '', refresh: sessionStorage.getItem(REFRESH_KEY) || '' };
