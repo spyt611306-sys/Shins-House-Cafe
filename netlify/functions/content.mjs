@@ -5,7 +5,7 @@ const { requireAdmin } = adminAuth;
 
 const DEFAULT_MEDIA = {
   hero: '/assets/hero-20260928.webp',
-  hero_secondary: '',
+  hero_secondary: '/assets/hero-cafe-v2.webp',
   logo: '/assets/logo-20260928.webp',
   americano_hot: '/assets/americano-hot.webp',
   americano_iced: '/assets/americano-iced.webp',
