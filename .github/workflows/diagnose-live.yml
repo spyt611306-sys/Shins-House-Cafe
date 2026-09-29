@@ -3,6 +3,8 @@ name: Diagnose Shin's House live APIs
 on:
   push:
     branches: ['main']
+    paths:
+      - '.github/workflows/diagnose-live.yml'
 
 permissions:
   contents: read
@@ -11,17 +13,57 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe live commerce APIs
+      - name: Verify live order flow and stock rollback
         shell: bash
         run: |
-          echo '=== HEALTH ==='
-          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/commerce-route?kind=health' || true
-          echo
-          echo '=== BOOTSTRAP ==='
-          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/api?route=bootstrap' || true
-          echo
-          echo '=== SITE CONTENT ==='
-          curl --silent --show-error --include --max-time 20 'https://shinshouse.netlify.app/.netlify/functions/content?route=site-content' || true
-          echo
-          echo '=== ADMIN CONFIG PROBE ==='
-          curl --silent --show-error --include --max-time 20 -X POST -H 'Content-Type: application/json' -d '{"email":"invalid@example.com","password":"invalid"}' 'https://shinshouse.netlify.app/.netlify/functions/admin?route=login' || true
+          set -euo pipefail
+
+          curl --fail-with-body --silent --show-error --max-time 20 'https://shinshouse.netlify.app/api/bootstrap' > /tmp/before.json
+          STOCK_BEFORE=$(node -e "const d=require('/tmp/before.json');const p=d.products.find(x=>Number(x.id)===5);if(!p)process.exit(2);process.stdout.write(String(p.stock));")
+
+          TEST_ADDRESS="시스템 테스트 배송지 ${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          TEST_ADDRESS="$TEST_ADDRESS" node - <<'NODE' > /tmp/order-payload.json
+          process.stdout.write(JSON.stringify({
+            customer_name: '시스템테스트',
+            phone: '01000000000',
+            shipping_address: process.env.TEST_ADDRESS,
+            delivery_memo: '자동 주문 검증 후 즉시 취소',
+            items: [{ product_id: 5, quantity: 1 }],
+            consents: { terms: true, privacy: true, refund: true }
+          }));
+          NODE
+
+          curl --fail-with-body --silent --show-error --max-time 20 \
+            -X POST -H 'Content-Type: application/json' \
+            --data-binary @/tmp/order-payload.json \
+            'https://shinshouse.netlify.app/api/orders' > /tmp/order.json
+
+          node - <<'NODE'
+          const fs = require('fs');
+          const order = JSON.parse(fs.readFileSync('/tmp/order.json', 'utf8'));
+          if (!order.order_id || !order.action_token) process.exit(3);
+          if (order.status !== '입금 대기') process.exit(4);
+          if (Number(order.subtotal) !== 27000 || Number(order.shipping_fee) !== 3000 || Number(order.total) !== 30000) process.exit(5);
+          if (!order.bank?.configured) process.exit(6);
+          NODE
+
+          ORDER_ID=$(node -e "const d=require('/tmp/order.json');process.stdout.write(d.order_id)")
+          ACTION_TOKEN=$(node -e "const d=require('/tmp/order.json');process.stdout.write(d.action_token)")
+          ACTION_TOKEN="$ACTION_TOKEN" node - <<'NODE' > /tmp/cancel-payload.json
+          process.stdout.write(JSON.stringify({ action_token: process.env.ACTION_TOKEN }));
+          NODE
+
+          curl --fail-with-body --silent --show-error --max-time 20 \
+            -X POST -H 'Content-Type: application/json' \
+            --data-binary @/tmp/cancel-payload.json \
+            "https://shinshouse.netlify.app/api/orders/${ORDER_ID}/cancel" > /tmp/cancel.json
+          node -e "const d=require('/tmp/cancel.json');if(!d.ok||d.status!=='주문 취소')process.exit(7)"
+
+          curl --fail-with-body --silent --show-error --max-time 20 'https://shinshouse.netlify.app/api/bootstrap' > /tmp/after.json
+          STOCK_AFTER=$(node -e "const d=require('/tmp/after.json');const p=d.products.find(x=>Number(x.id)===5);if(!p)process.exit(8);process.stdout.write(String(p.stock));")
+          if [ "$STOCK_BEFORE" != "$STOCK_AFTER" ]; then
+            echo "Stock rollback failed: before=$STOCK_BEFORE after=$STOCK_AFTER"
+            exit 9
+          fi
+
+          echo 'Production order test passed: order persisted, bank transfer configuration returned, cancellation succeeded and stock was restored.'
