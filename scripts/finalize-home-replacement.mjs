@@ -17,11 +17,13 @@ for (const legacy of ['sh-hero-copy', 'sh-brand-panel', 'sh-note-grid', 'sh-orig
 assert.ok(!/href=["'](?:\.\/)?styles\.css["']/.test(home), 'Homepage must not load old stylesheet');
 assert.ok(!/href=["'](?:\.\/)?styles\.css["']/.test(shop), 'Shop must not load old stylesheet');
 assert.ok(home.includes('/assets/hero-20260928.webp'));
+assert.ok(fs.existsSync('dist/assets/hero-cafe-v2.webp'), 'Alternate cafe hero artwork must be built');
+assert.ok(fs.statSync('dist/assets/hero-cafe-v2.webp').size > 12000, 'Alternate hero artwork must not be empty');
 assert.ok(home.includes('/experience.css'), 'Homepage must load experience.css');
 assert.ok(home.includes('/experience.js'), 'Homepage must load experience.js');
 assert.ok(experience.includes('나에게 맞는 원두 찾기'), 'Taste finder trigger is required');
 assert.ok(experience.includes('questions.length'), 'Taste finder questions are required');
-assert.ok(experience.includes("secondary.src = '/assets/hero-20260928.webp'"), 'Second hero slide must use the supplied golden cafe artwork');
+assert.ok(experience.includes("secondary.src = '/assets/hero-cafe-v2.webp'"), 'Second hero slide must use the cafe artwork');
 assert.ok(shop.includes('/cart.css'));
 assert.ok(shop.includes('/cart.js'));
 assert.ok(!fs.existsSync('dist/shop-runtime.js'), 'Legacy shop runtime must not be published');
