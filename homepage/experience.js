@@ -1,4 +1,6 @@
 (() => {
+  // The integrated Coffee Finder and Hero own these controls on the new homepage.
+  if (document.querySelector('#coffee-finder')) return;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   async function loadHeroMedia() {

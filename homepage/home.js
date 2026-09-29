@@ -1,4 +1,111 @@
 (() => {
+  const heroSlides = [...document.querySelectorAll('.hero-image')];
+  const heroDots = [...document.querySelectorAll('[data-hero-slide]')];
+  let activeSlide = 0;
+  function showHero(index) {
+    activeSlide = index;
+    heroSlides.forEach((slide, position) => slide.classList.toggle('active', position === index));
+    heroDots.forEach((dot, position) => {
+      dot.classList.toggle('active', position === index);
+      dot.setAttribute('aria-pressed', String(position === index));
+    });
+  }
+  heroDots.forEach((dot, position) => dot.addEventListener('click', () => showHero(position)));
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  if (!reducedMotion.matches) setInterval(() => {
+    if (!document.hidden) showHero((activeSlide + 1) % heroSlides.length);
+  }, 6500);
+
+  const finderQuestions = [
+    { title: '평소 커피를 마시는 스타일은 어떤가요?', options: [
+      ['뜨겁게 마시는 것이 좋아요', 'americano-hot.webp', [0, 1, 2]],
+      ['아이스로 자주 마셔요', 'americano-iced.webp', [2, 1, 0]],
+      ['우유가 들어간 커피를 좋아해요', 'cafe-latte.webp', [0, 2, 1]],
+      ['그때그때 달라요', 'cappuccino.webp', [1, 1, 1]]
+    ] },
+    { title: '가장 끌리는 맛은 무엇인가요?', options: [
+      ['꽃과 과일처럼 화사한 맛', '', [3, 0, 0]], ['고소하고 부드러운 맛', '', [0, 3, 0]], ['진하고 쌉싸름한 맛', '', [0, 0, 3]], ['균형 잡힌 맛', '', [0, 2, 1]]
+    ] },
+    { title: '산미는 어느 정도가 좋으세요?', options: [
+      ['산뜻한 산미가 좋아요', '', [3, 0, 0]], ['은은하면 좋아요', '', [1, 2, 0]], ['거의 없는 편이 좋아요', '', [0, 1, 3]], ['잘 모르겠어요', '', [1, 1, 1]]
+    ] },
+    { title: '커피의 바디감은 어떻게 즐기시나요?', options: [
+      ['가볍고 산뜻하게', '', [3, 0, 0]], ['부드럽고 편안하게', '', [0, 3, 0]], ['묵직하고 진하게', '', [0, 0, 3]], ['기분에 따라 달라요', '', [1, 1, 1]]
+    ] },
+    { title: '좋아하는 향을 골라주세요.', options: [
+      ['꽃 · 과일', '', [3, 0, 0]], ['견과 · 초콜릿', '', [0, 3, 1]], ['다크 초콜릿 · 카라멜', '', [0, 1, 3]], ['특별히 없어요', '', [1, 1, 1]]
+    ] },
+    { title: '커피를 가장 자주 마시는 시간은?', options: [
+      ['산뜻한 아침', '', [2, 1, 0]], ['여유로운 오후', '', [1, 2, 0]], ['식사 후 한 잔', '', [0, 1, 2]], ['언제든지', '', [1, 1, 1]]
+    ] },
+    { title: '커피와 함께라면 무엇을 고르시겠어요?', options: [
+      ['과일이나 가벼운 디저트', '', [2, 0, 0]], ['버터 쿠키나 빵', '', [0, 2, 0]], ['진한 초콜릿', '', [0, 0, 2]], ['커피만 즐길래요', '', [1, 1, 1]]
+    ] }
+  ];
+  const finderBeans = [
+    { id: 5, name: '에티오피아 싱글', note: '화사한 과일 향과 산뜻한 여운' },
+    { id: 6, name: '고소 블랜딩', note: '부드럽고 고소한 균형' },
+    { id: 7, name: '다크 블랜딩', note: '진한 바디감과 깊은 풍미' }
+  ];
+  const finderAnswers = Array(finderQuestions.length).fill(null);
+  let finderStep = 0;
+  let preferredBean = null;
+  const finderOptions = document.querySelector('#finder-options');
+  const finderNext = document.querySelector('#finder-next');
+  const finderBack = document.querySelector('#finder-back');
+  function renderFinder() {
+    const result = finderStep === finderQuestions.length;
+    const stepNumber = finderStep + 1;
+    document.querySelector('#finder-count').textContent = `${stepNumber}/8`;
+    document.querySelector('#finder-progress').setAttribute('aria-valuenow', String(stepNumber));
+    document.querySelector('#finder-progress > span').style.width = `${stepNumber * 12.5}%`;
+    document.querySelectorAll('.finder-steps li').forEach((item, index) => item.classList.toggle('current', index === finderStep));
+    document.querySelector('#finder-question-number').textContent = result ? 'YOUR COFFEE' : `Q${stepNumber}`;
+    finderOptions.replaceChildren();
+    finderBack.disabled = finderStep === 0;
+    finderNext.hidden = result;
+    if (result) {
+      const scores = [0, 0, 0];
+      finderAnswers.forEach((answer, index) => finderQuestions[index].options[answer][2].forEach((points, bean) => scores[bean] += points));
+      const winner = scores.indexOf(Math.max(...scores));
+      const bean = finderBeans[winner];
+      document.querySelector('#finder-question-title').textContent = `당신에게는 ${bean.name}`;
+      const detail = document.createElement('div');
+      detail.className = 'finder-result';
+      const note = document.createElement('p'); note.textContent = bean.note;
+      const link = document.createElement('a'); link.href = '#bean-store'; link.className = 'finder-next'; link.textContent = '이 원두 살펴보기 →';
+      link.addEventListener('click', () => chooseBean(bean.id));
+      detail.append(note, link); finderOptions.append(detail);
+      document.querySelectorAll('.preview-card').forEach(card => card.classList.toggle('recommended', Number(card.dataset.previewBean) === bean.id));
+      return;
+    }
+    const question = finderQuestions[finderStep];
+    document.querySelector('#finder-question-title').textContent = question.title;
+    finderOptions.classList.toggle('with-images', finderStep === 0);
+    question.options.forEach(([label, image], index) => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'finder-option';
+      button.setAttribute('aria-pressed', String(finderAnswers[finderStep] === index));
+      if (image) { const img = document.createElement('img'); img.src = `/assets/${image}`; img.alt = ''; img.loading = 'lazy'; button.append(img); }
+      const span = document.createElement('span'); span.textContent = label; button.append(span);
+      button.addEventListener('click', () => { finderAnswers[finderStep] = index; renderFinder(); });
+      finderOptions.append(button);
+    });
+    finderNext.disabled = finderAnswers[finderStep] === null;
+  }
+  document.querySelector('#finder-start').addEventListener('click', () => {
+    document.querySelector('.finder-quiz').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'center' });
+    document.querySelector('.finder-quiz').classList.add('engaged');
+    finderOptions.querySelector('button')?.focus({ preventScroll: true });
+  });
+  finderNext.addEventListener('click', () => { if (finderAnswers[finderStep] !== null) { finderStep++; renderFinder(); } });
+  finderBack.addEventListener('click', () => { if (finderStep > 0) { finderStep--; renderFinder(); } });
+  function chooseBean(id) {
+    preferredBean = id;
+    if (beanState.products.length) selectBeanProduct(id);
+  }
+  document.querySelectorAll('[data-preview-bean]').forEach(card => card.addEventListener('click', () => chooseBean(Number(card.dataset.previewBean))));
+  renderFinder();
+
   const menu = document.querySelector('#navigation-dialog');
   const search = document.querySelector('#search-dialog');
   const menuOpen = document.querySelector('#menu-open');
@@ -308,7 +415,7 @@
       return;
     }
     beanState.available = true;
-    selectBeanProduct(beanState.selected.id);
+    selectBeanProduct(beanState.products.some(product => Number(product.id) === preferredBean) ? preferredBean : beanState.selected.id);
     if (!beanState.commerceReady) beanStatus.textContent = '현재 온라인 주문을 준비 중입니다. 선택한 원두는 장바구니에서 확인하실 수 있습니다.';
   }
   retry?.addEventListener('click', initBeanShop);
