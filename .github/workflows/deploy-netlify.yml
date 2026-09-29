@@ -1,0 +1,71 @@
+name: Deploy Shin's House to Netlify
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+concurrency:
+  group: netlify-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NETLIFY_SITE_ID: 2d6505d3-6549-4ba8-9b33-e738c5981974
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify production build
+        run: npm run check
+
+      - name: Verify Netlify token is configured
+        shell: bash
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "NETLIFY_AUTH_TOKEN repository secret is not configured."
+            exit 1
+          fi
+
+      - name: Deploy production
+        run: >-
+          npx --yes netlify-cli@latest deploy
+          --build
+          --prod
+          --site "$NETLIFY_SITE_ID"
+          --auth "$NETLIFY_AUTH_TOKEN"
+          --message "GitHub Actions ${GITHUB_SHA}"
+
+      - name: Verify live production
+        shell: bash
+        run: |
+          for i in {1..12}; do
+            if curl --fail --silent --show-error --max-time 20 https://shinshouse.netlify.app/api/health/ready > /tmp/ready.json; then
+              cat /tmp/ready.json
+              node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/ready.json', 'utf8'));
+          if (data.storage !== 'netlify-blobs') process.exit(2);
+          if (data.commerce_ready !== true) process.exit(3);
+          NODE
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
